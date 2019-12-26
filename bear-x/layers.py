@@ -22,6 +22,12 @@ class Layer:
 
 
 class Linear(Layer):
+    """
+    Basic Linear layer.
+    Convets inputs as shown below:
+    output = inputs * weights + bias
+    output = activation_function(output)
+    """
     def __init__(self,
                  in_features: int,
                  out_features: int,
@@ -56,7 +62,9 @@ class Linear(Layer):
         # both methods give the same results
         # output = np.add(np.multiply(inputs, self.params["W"]), self.params["b"])[0]
         output = inputs @ self.params["W"] + self.params["b"]
-        return self.activation(output)
+        if self.activation:
+            return self.activation(output)
+        return output
 
 
 
