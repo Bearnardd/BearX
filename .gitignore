@@ -1,1 +1,5 @@
 .vscode/
+bearx
+bearx.egg-info/
+build/
+dist/
