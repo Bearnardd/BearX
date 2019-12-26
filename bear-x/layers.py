@@ -1,6 +1,7 @@
 from typing import Dict
 from tensor import Tensor
 import numpy as np
+import timeit
 
 
 class Layer:
@@ -12,7 +13,9 @@ class Layer:
         self.grads: Dict[str, Tensor] = {}
 
     def forward(self, inputs: Tensor) -> Tensor:
-        raise NotImplementedError
+        raise NotImplementedError(
+            "Function not implemented in base class!"
+        )
 
     def back_prop(self, grad: Tensor) -> Tensor:
         raise NotImplementedError
@@ -20,14 +23,11 @@ class Layer:
 
 class Linear(Layer):
     def __init__(self,
-                 units: int,
                  in_features: int,
                  out_features: int,
-                 output_size: int,
                  activation=None,
                  **kwargs):
         super(Linear, self).__init__(**kwargs)
-        self.units = units
         # TODO: add activations
         self.activation = activation
         self.in_features = in_features
@@ -45,10 +45,18 @@ class Linear(Layer):
             self.params["W"] = np.random.rand(
                 self.in_features, self.out_features) * 0.1
             self.params["b"] = np.random.rand(
-                self.out_features, 1) * 0.1
+                self.out_features,) * 0.1
 
     def forward(self, inputs: Tensor) -> Tensor:
         """
-        output = input * W + b
+        element wise multiplication and addition
+        :param: inputs: Tensor - input data
+        :return: output matrix with activation function applied
         """
-        return inputs * self.params["W"] + self.params["b"]
+        # both methods give the same results
+        # output = np.add(np.multiply(inputs, self.params["W"]), self.params["b"])[0]
+        output = inputs @ self.params["W"] + self.params["b"]
+        return self.activation(output)
+
+
+
