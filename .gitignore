@@ -3,3 +3,6 @@ bearx
 bearx.egg-info/
 build/
 dist/
+bear-x/.ipynb_checkpoints/
+bear-x/Untitled.ipynb
+*/__pycache__/
