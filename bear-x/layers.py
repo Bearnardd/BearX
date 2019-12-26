@@ -12,13 +12,20 @@ class Layer:
         self.params: Dict[str, Tensor] = {}
         self.grads: Dict[str, Tensor] = {}
 
+    def __getitem__(self):
+        raise NotImplementedError(
+            "Function not implemented in base class!"
+        )
+
     def forward(self, inputs: Tensor) -> Tensor:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
 
     def back_prop(self, grad: Tensor) -> Tensor:
-        raise NotImplementedError
+        raise NotImplementedError(
+            "Function not implemented in base class!"
+        )
 
 
 class Linear(Layer):
@@ -53,6 +60,14 @@ class Linear(Layer):
             self.params["b"] = np.random.rand(
                 self.out_features,) * 0.1
 
+    def __getitem__(self):
+        item = {
+            "in_features": self.in_features,
+            "out_features": self.out_features,
+            "activation": self.activation.__getitem__(self)
+        }
+        return item
+
     def forward(self, inputs: Tensor) -> Tensor:
         """
         element wise multiplication and addition
@@ -63,7 +78,7 @@ class Linear(Layer):
         # output = np.add(np.multiply(inputs, self.params["W"]), self.params["b"])[0]
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
-            return self.activation(output)
+            return self.activation.calc(output)
         return output
 
 
