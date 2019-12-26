@@ -1,2 +1,2 @@
-# DeepX
+# BearX
 deep learning library
