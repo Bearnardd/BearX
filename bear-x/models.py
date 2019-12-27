@@ -2,6 +2,7 @@
 Let's start with simple Sequential model
 """
 from layers import Layer 
+from tensor import Tensor
 
 class Model:
     def __init__(self):
@@ -29,9 +30,7 @@ class Model:
         transformed output
         """
         for layer in self.model.values():
-            layer_type = layer.__class__.__name__
-            if layer_type == "Linear":
-                inputs = layer.forward(inputs)
+            inputs = layer.forward(inputs)
         return inputs
 
     def backward(self, gradient: Tensor) -> Tensor:

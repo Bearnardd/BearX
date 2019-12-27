@@ -3,6 +3,8 @@ from tensor import Tensor
 import numpy as np
 import timeit
 
+from activations import *
+
 
 class Layer:
     def __init__(self, **kwargs):
@@ -67,7 +69,7 @@ class Linear(Layer):
         item = {
             "in_features": self.in_features,
             "out_features": self.out_features,
-            "activation": self.activation.__name__
+            "activation": self.activation.__name__ if self.activation is not None else "None"
         }
         return item
 
@@ -79,10 +81,35 @@ class Linear(Layer):
         """
         # both methods give the same results
         # output = np.add(np.multiply(inputs, self.params["W"]), self.params["b"])[0]
+        self.inputs = inputs
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
             return self.activation(output)
         return output
 
+    def back_propagation(self, gradient: Tensor) -> Tensor:
+        self.grads["b"] = np.sum(gradient, axis=0)
+        self.grads["w"] = self.inputs.T @ gradient
+        return gradient @ self.params["w"].T
 
 
+class Activation(Layer):
+    def __init__(self, activation, activation_prime) -> None:
+        super(Activation, self).__init__()
+        self.activation= activation 
+        self.activation_prime = activation_prime
+
+    def __getitem__(self):
+        return {"activation": self.activation.__name__}
+
+    def forward(self, inputs: Tensor) -> Tensor:
+        self.inputs = inputs
+        return self.activation(inputs) 
+
+    def backward(self, grad: Tensor) -> Tensor:
+        return self.activation_prime(self.inputs) * gradient
+
+
+class Relu(Activation):
+    def __init__(self):
+        super(Relu, self).__init__(relu, relu_prime)
