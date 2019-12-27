@@ -61,10 +61,13 @@ class Linear(Layer):
                 self.out_features,) * 0.1
 
     def __getitem__(self):
+        """
+        Return information about layer
+        """
         item = {
             "in_features": self.in_features,
             "out_features": self.out_features,
-            "activation": self.activation.__getitem__(self)
+            "activation": self.activation.__name__
         }
         return item
 
@@ -78,7 +81,7 @@ class Linear(Layer):
         # output = np.add(np.multiply(inputs, self.params["W"]), self.params["b"])[0]
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
-            return self.activation.calc(output)
+            return self.activation(output)
         return output
 
 
