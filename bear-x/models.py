@@ -16,11 +16,13 @@ class Model:
         """
         prints out model architecture
         """
+        print(24*' ', "Model Summary")
+        print(63*'=')
         for name, layer in self.model.items():
-            print(name, end="\n")
+            print(name.upper(), end="\n")
             print(layer.__getitem__(), end="\n")
-    
-    def feed_forward(self, x):
+        print(63*'=')
+    def feed_forward(self, inputs: Tensor) -> Tensor:
         """
         Implementation of feed forward algorirthm
         We iterate over all Linear layers to get 
@@ -29,6 +31,9 @@ class Model:
         for layer in self.model.values():
             layer_type = layer.__class__.__name__
             if layer_type == "Linear":
-                x = layer.forward(x)
-        return x
+                inputs = layer.forward(inputs)
+        return inputs
+
+    def backward(self, gradient: Tensor) -> Tensor:
+        pass
 
