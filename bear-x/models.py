@@ -7,22 +7,27 @@ from tensor import Tensor
 class Model:
     def __init__(self):
         self.model = {}
-        self.idx = 0
+        self.layer_idx = 0
 
     def add(self, layer: Layer):
-        self.model[f"layer_{self.idx}"] = layer
-        self.idx += 1
+        self.model[f"layer_{self.layer_idx}"] = layer
+        self.layer_idx += 1
 
     def skeleton(self):
         """
         prints out model architecture
         """
-        print(24*' ', "Model Summary")
-        print(63*'=')
-        for name, layer in self.model.items():
-            print(name.upper(), end="\n")
-            print(layer.__getitem__(), end="\n")
-        print(63*'=')
+        print(24 * ' ', "Model Summary")
+        print(63 * '=')
+        if self.layer_idx > 0:
+            for name, layer in self.model.items():
+                print(name.upper(), end="\n")
+                print(layer.__getitem__(), end="\n")
+        else:
+            print(20 * " " + "Model has no layers yet!")
+            print(17 * " " + "To add some use add() method")
+        print(63 * '=')
+
     def feed_forward(self, inputs: Tensor) -> Tensor:
         """
         Implementation of feed forward algorirthm
@@ -30,9 +35,11 @@ class Model:
         transformed output
         """
         for layer in self.model.values():
-            inputs = layer.forward(inputs)
+            inputs = layer.feed_forward(inputs)
         return inputs
 
     def backward(self, gradient: Tensor) -> Tensor:
-        pass
-
+        for idx in reversed(range(self.layer_idx)):
+            layer = self.model[f"layer_{idx}"]
+            gradient = layer.back_propagation(gradient)
+        return gradient
