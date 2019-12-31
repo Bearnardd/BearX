@@ -7,17 +7,16 @@ from tensor import Tensor
 
 import numpy as np
 
-
+# TODO: change sigmoid function 
 def relu(inputs: Tensor) -> Tensor:
     assert type(inputs) == np.ndarray, "Inputs have to be a Tensor(np.array)!"
-    inputs = [np.maximum(0, inputs[node]) for node in range(len(inputs))]
-    return np.array(inputs)
+    return np.maximum(inputs, 0, inputs) 
+
 
 
 def relu_prime(inputs: Tensor) -> Tensor:
     assert type(inputs) == np.ndarray, "Inputs have to be a Tensor(np.array)!"
-    inputs = [1 if inputs[node] > 0 else 0 for node in range(len(inputs))]
-    return np.array(inputs)
+    return (inputs>0).astype(inputs.dtype)
 
 
 def sigmoid(inputs: Tensor) -> Tensor:

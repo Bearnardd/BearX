@@ -100,13 +100,13 @@ class Activation(Layer):
         self.activation_prime = activation_prime
 
     def __getitem__(self):
-        return {"activation": self.activation.__class__.__name__}
+        return {"activation": self.activation.__name__}
 
     def feed_forward(self, inputs: Tensor) -> Tensor:
         self.inputs = inputs
         return self.activation(inputs) 
 
-    def back_propagation(self, grad: Tensor) -> Tensor:
+    def back_propagation(self, gradient: Tensor) -> Tensor:
         return self.activation_prime(self.inputs) * gradient
 
 
