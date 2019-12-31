@@ -19,7 +19,7 @@ class Layer:
             "Function not implemented in base class!"
         )
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def feed_forward(self, inputs: Tensor) -> Tensor:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
@@ -69,11 +69,11 @@ class Linear(Layer):
         item = {
             "in_features": self.in_features,
             "out_features": self.out_features,
-            "activation": self.activation.__name__ if self.activation is not None else "None"
+            "activation": self.activation.__class__.__name__ if self.activation is not None else "None"
         }
         return item
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def feed_forward(self, inputs: Tensor) -> Tensor:
         """
         element wise multiplication and addition
         :param: inputs: Tensor - input data
@@ -84,13 +84,13 @@ class Linear(Layer):
         self.inputs = inputs
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
-            return self.activation(output)
+            return self.activation.feed_forward(output)
         return output
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
         self.grads["b"] = np.sum(gradient, axis=0)
-        self.grads["w"] = self.inputs.T @ gradient
-        return gradient @ self.params["w"].T
+        self.grads["W"] = self.inputs.T @ gradient
+        return gradient @ self.params["W"].T
 
 
 class Activation(Layer):
@@ -100,13 +100,13 @@ class Activation(Layer):
         self.activation_prime = activation_prime
 
     def __getitem__(self):
-        return {"activation": self.activation.__name__}
+        return {"activation": self.activation.__class__.__name__}
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def feed_forward(self, inputs: Tensor) -> Tensor:
         self.inputs = inputs
         return self.activation(inputs) 
 
-    def backward(self, grad: Tensor) -> Tensor:
+    def back_propagation(self, grad: Tensor) -> Tensor:
         return self.activation_prime(self.inputs) * gradient
 
 

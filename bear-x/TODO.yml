@@ -1,3 +1,4 @@
 TODO:
     - assert shape in sigmoid for example
     - think about converting activation functions to layers
+    - add docs

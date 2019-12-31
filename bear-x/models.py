@@ -43,3 +43,11 @@ class Model:
             layer = self.model[f"layer_{idx}"]
             gradient = layer.back_propagation(gradient)
         return gradient
+
+    def get_params_and_gradients(self):
+        for layer in self.model.values():
+            for name, param in layer.params.items():
+                print(name)
+                grad = layer.grads[name]
+                yield param, grad
+
