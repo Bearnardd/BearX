@@ -6,4 +6,5 @@ dist/
 bear-x/.ipynb_checkpoints/
 bear-x/Untitled.ipynb
 */__pycache__/
+bear-x/utils/data/__pycache__
 tags
