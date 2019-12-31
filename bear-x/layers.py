@@ -89,8 +89,8 @@ class Linear(Layer):
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
         self.grads["b"] = np.sum(gradient, axis=0)
-        self.grads["W"] = self.inputs.T @ gradient
-        return gradient @ self.params["W"].T
+        self.grads["W"] = np.multiply(self.inputs.T, gradient)
+        return np.multiply(gradient, self.params["W"].T)
 
 
 class Activation(Layer):
@@ -113,3 +113,8 @@ class Activation(Layer):
 class Relu(Activation):
     def __init__(self):
         super(Relu, self).__init__(relu, relu_prime)
+
+
+class Sigmoid(Activation):
+    def __init__(self):
+        super(Sigmoid, self).__init__(sigmoid, sigmoid_prime)
