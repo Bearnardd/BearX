@@ -1,8 +1,11 @@
 import numpy as np
+from typing import NamedTuple
 import sys
 sys.path.append("..")
 
 from tensor import Tensor 
+
+Batch = NamedTuple("Batch", [("inputs", Tensor), ("targets", Tensor)])
 
 
 class DataLoader(object):
@@ -10,7 +13,7 @@ class DataLoader(object):
         self.batch_size = batch_size
         self.shuffle = shuffle
 
-    def __iter__(self, inputs: Tensor, targets: Tensor):
+    def __call__(self, inputs: Tensor, targets: Tensor):
         starts = np.arange(0, len(inputs), self.batch_size)
         if self.shuffle:
             np.random.shuffle(inputs)
@@ -19,4 +22,4 @@ class DataLoader(object):
             end = start + self.batch_size
             batch_inputs = inputs[start:end]
             batch_targets = targets[start:end]
-            yield batch_inputs, batch_targets
+            yield Batch(batch_inputs, batch_targets)
