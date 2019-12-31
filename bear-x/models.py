@@ -6,11 +6,11 @@ from tensor import Tensor
 
 class Model:
     def __init__(self):
-        self.model = {}
+        self.layers = {}
         self.layer_idx = 0
 
     def add(self, layer: Layer):
-        self.model[f"layer_{self.layer_idx}"] = layer
+        self.layers[f"layer_{self.layer_idx}"] = layer
         self.layer_idx += 1
 
     def skeleton(self):
@@ -20,7 +20,7 @@ class Model:
         print(24 * ' ', "Model Summary")
         print(63 * '=')
         if self.layer_idx > 0:
-            for name, layer in self.model.items():
+            for name, layer in self.layers.items():
                 print(name.upper(), end="\n")
                 print(layer.__getitem__(), end="\n")
         else:
@@ -34,20 +34,18 @@ class Model:
         We iterate over all Linear layers to get 
         transformed output
         """
-        for layer in self.model.values():
+        for layer in self.layers.values():
             inputs = layer.feed_forward(inputs)
         return inputs
 
     def backward(self, gradient: Tensor) -> Tensor:
         for idx in reversed(range(self.layer_idx)):
-            layer = self.model[f"layer_{idx}"]
+            layer = self.layers[f"layer_{idx}"]
             gradient = layer.back_propagation(gradient)
         return gradient
 
     def get_params_and_gradients(self):
-        for layer in self.model.values():
+        for layer in self.layers.values():
             for name, param in layer.params.items():
-                print(name)
                 grad = layer.grads[name]
                 yield param, grad
-
