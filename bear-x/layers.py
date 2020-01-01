@@ -1,9 +1,11 @@
 from typing import Dict
 from tensor import Tensor
 import numpy as np
-import timeit
 
-from activations import *
+from activations import (
+        relu, relu_prime, sigmoid, sigmoid_prime,
+        tanh, tanh_prime
+    )
 
 
 class Layer:
@@ -54,13 +56,13 @@ class Linear(Layer):
         for kwarg in kwargs:
             if kwargs not in allowed_kwargs:
                 raise TypeError(f"Keyword argument not understood: {kwarg}")
+
         self.weight_initializer = kwargs.get('weight_initializer', None)
 
         if self.weight_initializer is None:
-            self.params["W"] = np.random.rand(
-                self.in_features, self.out_features) * 0.1
-            self.params["b"] = np.random.rand(
-                self.out_features,) * 0.1
+            self.params["W"] = np.random.randn(
+                self.in_features, self.out_features)
+            self.params["b"] = np.random.randn(self.out_features)
 
     def __getitem__(self):
         """
@@ -69,7 +71,8 @@ class Linear(Layer):
         item = {
             "in_features": self.in_features,
             "out_features": self.out_features,
-            "activation": self.activation.__class__.__name__ if self.activation is not None else "None"
+            "activation": (self.activation.__class__.__name__ if
+                           self.activation is not None else "None")
         }
         return item
 
@@ -80,7 +83,8 @@ class Linear(Layer):
         :return: output matrix with activation function applied
         """
         # both methods give the same results
-        # output = np.add(np.multiply(inputs, self.params["W"]), self.params["b"])[0]
+        # output = np.add(np.multiply(inputs, self.params["W"]) \
+        # self.params["b"]))[0]
         self.inputs = inputs
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
@@ -88,15 +92,20 @@ class Linear(Layer):
         return output
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
+        """
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = np.multiply(self.inputs.T, gradient)
         return np.multiply(gradient, self.params["W"].T)
+        """
+        self.grads["b"] = np.sum(gradient, axis=0)
+        self.grads["W"] = self.inputs.T @ gradient
+        return gradient @ self.params["W"].T
 
 
 class Activation(Layer):
     def __init__(self, activation, activation_prime) -> None:
         super(Activation, self).__init__()
-        self.activation= activation 
+        self.activation = activation
         self.activation_prime = activation_prime
 
     def __getitem__(self):
@@ -104,7 +113,7 @@ class Activation(Layer):
 
     def feed_forward(self, inputs: Tensor) -> Tensor:
         self.inputs = inputs
-        return self.activation(inputs) 
+        return self.activation(inputs)
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
         return self.activation_prime(self.inputs) * gradient
@@ -120,6 +129,6 @@ class Sigmoid(Activation):
         super(Sigmoid, self).__init__(sigmoid, sigmoid_prime)
 
 
-class Tanh(Activation):                                                                                                            
-    def __init__(self):                                                                                                            
-       super(Tanh, self).__init__(tanh, tanh_prime)  
+class Tanh(Activation):
+    def __init__(self):
+        super(Tanh, self).__init__(tanh, tanh_prime)
