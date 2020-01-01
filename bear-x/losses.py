@@ -24,7 +24,6 @@ class MSE(Loss):
         mse = np.sum((predicted - target) ** 2)
         return mse
 
-
     def gradient(self, predicted: Tensor, target: Tensor) -> Tensor:
         gradient = 2 * (predicted - target)
         return gradient
