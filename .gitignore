@@ -5,6 +5,7 @@ build/
 dist/
 bear-x/.ipynb_checkpoints/
 bear-x/Untitled.ipynb
+bear-x/Untitled2.ipynb
 */__pycache__/
 bear-x/utils/data/__pycache__
 tags

@@ -6,27 +6,26 @@ from tensor import Tensor
 
 class Model:
     def __init__(self):
-        self.layers = {}
-        self.layer_idx = 0
+        self.layers = [] 
 
     def add(self, layer: Layer):
-        self.layers[f"layer_{self.layer_idx}"] = layer
-        self.layer_idx += 1
+        self.layers.extend(layer)
 
     def skeleton(self):
         """
         prints out model architecture
-        """
+
         print(24 * ' ', "Model Summary")
         print(63 * '=')
-        if self.layer_idx > 0:
-            for name, layer in self.layers.items():
+        if layers:
+            for layer in self.layers:
                 print(name.upper(), end="\n")
                 print(layer.__getitem__(), end="\n")
         else:
             print(20 * " " + "Model has no layers yet!")
             print(17 * " " + "To add some use add() method")
         print(63 * '=')
+        """
 
     def feed_forward(self, inputs: Tensor) -> Tensor:
         """
@@ -34,13 +33,12 @@ class Model:
         We iterate over all Linear layers to get 
         transformed output
         """
-        for layer in self.layers.values():
+        for layer in self.layers:
             inputs = layer.feed_forward(inputs)
         return inputs
 
     def backward(self, gradient: Tensor) -> Tensor:
-        for idx in reversed(range(self.layer_idx)):
-            layer = self.layers[f"layer_{idx}"]
+        for layers in reversed(self.layers):
             gradient = layer.back_propagation(gradient)
         return gradient
 

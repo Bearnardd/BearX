@@ -118,3 +118,8 @@ class Relu(Activation):
 class Sigmoid(Activation):
     def __init__(self):
         super(Sigmoid, self).__init__(sigmoid, sigmoid_prime)
+
+
+class Tanh(Activation):                                                                                                            
+    def __init__(self):                                                                                                            
+       super(Tanh, self).__init__(tanh, tanh_prime)  

@@ -29,3 +29,12 @@ def sigmoid_prime(inputs: Tensor) -> Tensor:
     assert type(inputs) == np.ndarray, "Inputs have to be a Tensor(np.array)!"
     inputs = [sigmoid(node) * (1 - sigmoid(node)) for node in range(len(inputs))]
     return np.array(inputs)
+
+
+def tanh(x: Tensor) -> Tensor:
+    return np.tanh(x)
+
+
+def tanh_prime(x: Tensor) -> Tensor:
+    y = tanh(x)
+    return 1 - y ** 2
