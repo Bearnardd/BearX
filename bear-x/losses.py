@@ -21,9 +21,10 @@ class MSE(Loss):
     def loss(self, predicted: Tensor, target: Tensor) -> float:
         assert type(predicted) == np.ndarray
         assert type(target) == np.ndarray
-        mse = np.mean((predicted - target) ** 2)
+        mse = np.sum((predicted - target) ** 2)
         return mse
 
+
     def gradient(self, predicted: Tensor, target: Tensor) -> Tensor:
-        gradient = 2 * np.mean(predicted - target)
+        gradient = 2 * (predicted - target)
         return gradient
