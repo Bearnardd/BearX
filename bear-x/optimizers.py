@@ -17,5 +17,5 @@ class SGD(Optimizer):
         Adjust layers params according
         to learning rate and gradient
         """
-        for param, grad in model.get_params_and_gradients():
-            param -= self.lr * grad
+        for param, gradient in model.get_params_and_gradients():
+            param -= self.lr * gradient
