@@ -16,7 +16,7 @@ class Layer:
         self.params: Dict[str, Tensor] = {}
         self.grads: Dict[str, Tensor] = {}
 
-    def __getitem__(self):
+    def __repr__(self):
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
@@ -64,7 +64,7 @@ class Linear(Layer):
                 self.in_features, self.out_features)
             self.params["b"] = np.random.randn(self.out_features)
 
-    def __getitem__(self):
+    def __repr__(self, x: int = None):
         """
         Return information about layer
         """
@@ -108,7 +108,7 @@ class Activation(Layer):
         self.activation = activation
         self.activation_prime = activation_prime
 
-    def __getitem__(self):
+    def __repr__(self):
         return {"activation": self.activation.__name__}
 
     def feed_forward(self, inputs: Tensor) -> Tensor:

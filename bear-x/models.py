@@ -20,7 +20,6 @@ class Model:
         """
         prints out model architecture
         """
-        print(self)
         print(24 * ' ', "Model Summary")
         print(63 * '=')
 
@@ -29,7 +28,7 @@ class Model:
             for layer in self.layers:
                 name = layer.__class__.__name__
                 print(f"{name.upper()} (layer_{layer_idx})", end="\n")
-                print(layer.__getitem__(), end="\n")
+                print(layer.__repr__(), end="\n")
                 layer_idx += 1
         else:
             print(20 * " " + "Model has no layers yet!")
@@ -77,9 +76,10 @@ class Model:
               labels: Tensor,
               epochs: int = 5000) -> None:
         assert self.compiled, ("Before Training You have "
-                "to compile the model!")
+                               "to compile the model!")
         print("The Training have begun!")
         for epoch in range(epochs):
+            print(epoch)
             epoch_loss = 0.0
             for batch in self.iterator(inputs, labels):
                 preds = self.feed_forward(batch.inputs)

@@ -23,3 +23,4 @@ class DataLoader(object):
             batch_inputs = inputs[start:end]
             batch_targets = targets[start:end]
             yield Batch(batch_inputs, batch_targets)
+            break

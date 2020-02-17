@@ -31,7 +31,7 @@ if __name__ == "__main__":
     model.add(Linear(10 ,50))
     model.add(Tanh())
     model.add(Linear(50,4))
-    model.skeleton()
+    # model.skeleton()
 
     inputs = np.array([
         binary_encode(x)
@@ -42,6 +42,8 @@ if __name__ == "__main__":
         fizz_buzz_encode(x)
         for x in range(101, 1024)
     ])
+
+    # [0100001001] -> [1000]
 
     model.compile()
     model.train(inputs, targets, 5)
