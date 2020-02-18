@@ -2,6 +2,7 @@ from typing import Dict
 from tensor import Tensor
 import numpy as np
 
+# change it to *?
 from activations import (
         relu, relu_prime, sigmoid, sigmoid_prime,
         tanh, tanh_prime

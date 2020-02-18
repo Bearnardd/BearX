@@ -7,6 +7,8 @@ from utils.data.DataLoader import DataLoader
 from losses import Loss, MSE
 from optimizers import Optimizer, SGD
 
+import numpy as np
+
 
 class Model:
     def __init__(self) -> None:
@@ -79,11 +81,12 @@ class Model:
                                "to compile the model!")
         print("The Training have begun!")
         for epoch in range(epochs):
-            print(epoch)
             epoch_loss = 0.0
             for batch in self.iterator(inputs, labels):
                 preds = self.feed_forward(batch.inputs)
-                epoch_loss += self.loss.loss(preds, batch.targets)
+                loss = self.loss.loss(preds, batch.targets)
+                epoch_loss += loss
                 gradient = self.loss.gradient(preds, batch.targets)
                 self.back_propagation(gradient)
                 self.optimizer.step(self)
+            print(f"Epoch: {epoch}, Loss: {epoch_loss}")

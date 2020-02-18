@@ -2,6 +2,10 @@ from tensor import Tensor
 
 import numpy as np
 
+# ignore numpy warning
+import warnings
+warnings.filterwarnings("ignore")
+
 
 class Loss:
     def loss(self, predicted: Tensor, target: Tensor) -> float:
@@ -10,7 +14,9 @@ class Loss:
         )
 
     def gradient(self, pred: Tensor, target: Tensor) -> Tensor:
-        return 2 * (predicted - target)
+        raise NotImplementedError(
+            "Not implemented in base class!"
+        )
 
 
 class MSE(Loss):
@@ -25,5 +31,8 @@ class MSE(Loss):
         return mse
 
     def gradient(self, predicted: Tensor, target: Tensor) -> Tensor:
+        """
+        derivative of mse is just 2 * (predicted - target)
+        """
         gradient = 2 * (predicted - target)
         return gradient

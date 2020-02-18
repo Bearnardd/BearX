@@ -16,11 +16,10 @@ class DataLoader(object):
     def __call__(self, inputs: Tensor, targets: Tensor):
         starts = np.arange(0, len(inputs), self.batch_size)
         if self.shuffle:
-            np.random.shuffle(inputs)
+            np.random.shuffle(starts)
 
         for start in starts:
             end = start + self.batch_size
             batch_inputs = inputs[start:end]
             batch_targets = targets[start:end]
             yield Batch(batch_inputs, batch_targets)
-            break
