@@ -7,6 +7,8 @@ from optimizers import Optimizer, SGD
 from utils.data.DataLoader import DataLoader
 
 import numpy as np
+import pickle
+
 from typing import List
 
 def fizz_buzz_encode(x: int) -> List[int]:
@@ -26,13 +28,23 @@ def binary_encode(x: int) -> List[int]:
     return [x >> i & 1 for i in range(10)]
 
 
+def save_weights(name):
+    with open(f"../model_data/weights/{name}.pkl", 'wb') as f:
+        pickle.dump()
+
+
+
+
 if __name__ == "__main__":
     model = Model()
     model.add(Linear(10 ,50))
     model.add(Tanh())
     model.add(Linear(50,4))
     model.skeleton()
-
+    #model.save_weights("test")
+    model.load_weights("test")
+    # print(params)
+    """
     inputs = np.array([
         binary_encode(x)
         for x in range(101, 1024)
@@ -45,11 +57,8 @@ if __name__ == "__main__":
 
 
     # [0100001001] -> [1000]
-
-    model.compile(batch_size=32, lr=0.001)
-    model.train(inputs, targets, 2000)
-
-	
-	
-
-	
+    # model.compile(batch_size=32, lr=0.001)
+    # model.train(inputs, targets, 2000)
+    for layer in model.layers:
+        print(layer.params)
+"""

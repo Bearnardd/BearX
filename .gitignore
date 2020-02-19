@@ -11,3 +11,4 @@ bear-x/utils/data/__pycache__
 tags
 .mypy_cache/
 .idea/
+model_data/

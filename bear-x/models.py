@@ -9,6 +9,9 @@ from optimizers import Optimizer, SGD
 
 import numpy as np
 
+import os
+import pickle
+
 
 class Model:
     def __init__(self) -> None:
@@ -90,3 +93,26 @@ class Model:
                 self.back_propagation(gradient)
                 self.optimizer.step(self)
             print(f"Epoch: {epoch}, Loss: {epoch_loss}")
+
+    def save_weights(self, name):
+        i = 0
+        dir_path = f"../model_data/weights/model_{name}_data" 
+        if not os.path.exists(dir_path):
+            os.mkdir(dir_path)
+        for layer in self.layers:
+            with open(os.path.join(dir_path, f"layer_{i}_weights.pkl"), "wb") as f:
+                pickle.dump(layer.params, f, pickle.HIGHEST_PROTOCOL)
+                i += 1
+        print("Successfully saved model weights!")
+
+    def load_weights(self, name):
+        i = 0
+        dir_path = f"../model_data/weights/model_{name}_data" 
+        if os.path.exists(dir_path):
+            for layer in self.layers:
+                with open(os.path.join(dir_path, f"layer_{i}_weights.pkl"), "rb") as f:
+                    params = pickle.load(f)
+                    print(params)
+        else:
+            raise NotADirectoryError(f"Cant find a directory: {dir_path}")
+
