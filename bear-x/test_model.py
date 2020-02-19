@@ -28,22 +28,20 @@ def binary_encode(x: int) -> List[int]:
     return [x >> i & 1 for i in range(10)]
 
 
-def save_weights(name):
-    with open(f"../model_data/weights/{name}.pkl", 'wb') as f:
-        pickle.dump()
-
-
-
-
 if __name__ == "__main__":
     model = Model()
     model.add(Linear(10 ,50))
     model.add(Tanh())
     model.add(Linear(50,4))
     model.skeleton()
+    preds = model.feed_forward([0,1,0,0,0,1,1,0,0,0])
+    print(preds)
     #model.save_weights("test")
     model.load_weights("test")
-    # print(params)
+    preds = model.feed_forward([0,1,0,0,0,1,1,0,0,0])
+    print(preds)
+    #model.feed_forward([0,1,0,0,0,1,1,0,0,0])
+
     """
     inputs = np.array([
         binary_encode(x)

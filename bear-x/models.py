@@ -97,8 +97,9 @@ class Model:
     def save_weights(self, name):
         i = 0
         dir_path = f"../model_data/weights/model_{name}_data" 
+        print(os.listdir(".."))
         if not os.path.exists(dir_path):
-            os.mkdir(dir_path)
+            os.makedirs(dir_path)
         for layer in self.layers:
             with open(os.path.join(dir_path, f"layer_{i}_weights.pkl"), "wb") as f:
                 pickle.dump(layer.params, f, pickle.HIGHEST_PROTOCOL)
@@ -112,7 +113,10 @@ class Model:
             for layer in self.layers:
                 with open(os.path.join(dir_path, f"layer_{i}_weights.pkl"), "rb") as f:
                     params = pickle.load(f)
-                    print(params)
+                    for name, param in params.items():
+                        layer.params[name] = param
+                i += 1
         else:
             raise NotADirectoryError(f"Cant find a directory: {dir_path}")
+        print("Weight Loaded Successfully!")
 
