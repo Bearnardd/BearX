@@ -8,7 +8,6 @@ from bearx.activations import (
         tanh, tanh_prime
     )
 
-
 class Layer:
     def __init__(self, **kwargs):
         """

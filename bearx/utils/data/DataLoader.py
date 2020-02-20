@@ -14,10 +14,12 @@ class DataLoader(object):
         self.shuffle = shuffle
 
     def __call__(self, inputs: Tensor, targets: Tensor):
+        # TODO: not sure if it is gonna work in every case
+        if len(targets.shape) == 1:
+            targets = np.expand_dims(targets, axis=1)
         starts = np.arange(0, len(inputs), self.batch_size)
         if self.shuffle:
             np.random.shuffle(starts)
-
         for start in starts:
             end = start + self.batch_size
             batch_inputs = inputs[start:end]

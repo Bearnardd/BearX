@@ -79,7 +79,8 @@ class Sequential:
     def train(self,
               inputs: Tensor,
               labels: Tensor,
-              epochs: int = 5000) -> None:
+              epochs: int = 5000,
+              verbose: bool = False) -> None:
         assert self.compiled, ("Before Training You have "
                                "to compile the model!")
         print("The Training have begun!")
@@ -92,11 +93,12 @@ class Sequential:
                 gradient = self.loss.gradient(preds, batch.targets)
                 self.back_propagation(gradient)
                 self.optimizer.step(self)
-            print(f"Epoch: {epoch}, Loss: {epoch_loss}")
+            if verbose:
+                print(f"Epoch: {epoch}, Loss: {epoch_loss:.5f}")
 
     def save_weights(self, name):
         i = 0
-        dir_path = f"../model_data/weights/{name}_model_weights" 
+        dir_path = f"../model_data/weights/{name}_model_weights"
         print(os.listdir(".."))
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
@@ -108,7 +110,7 @@ class Sequential:
 
     def load_weights(self, name):
         i = 0
-        dir_path = f"../model_data/weights/{name}_model_weights" 
+        dir_path = f"../model_data/weights/{name}_model_weights"
         if os.path.exists(dir_path):
             for layer in self.layers:
                 with open(os.path.join(dir_path, f"layer_{i}_weights.pkl"), "rb") as f:
@@ -119,4 +121,3 @@ class Sequential:
         else:
             raise NotADirectoryError(f"Cant find a directory: {dir_path}")
         print("Weight Loaded Successfully!")
-

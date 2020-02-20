@@ -11,3 +11,5 @@ tags
 .mypy_cache/
 .idea/
 model_data/
+tags
+bearx/utils/data/__pycache__/DataLoader.cpython-36.pyc
