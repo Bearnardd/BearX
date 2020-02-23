@@ -9,6 +9,11 @@ from bearx.models import Sequential
 from bearx.losses import MSE
 from bearx.optimizers import SGD
 
+import matplotlib
+matplotlib.use('TkAgg') 
+import matplotlib.pyplot as plt
+
+
 INPUT_SIZE = 3 
 HIDDEN_SIZE = 50 
 OUTPUT_SIZE = 1
@@ -39,9 +44,12 @@ model.compile(
 )
 
 # to train we just use train method
-model.train(inputs, outputs, 15000, verbose=True)
+history = model.train(inputs, outputs, 10, verbose=True)
+print(history.history["loss"])
+
+plt.plot(history.history["loss"])
+plt.show()
 
 # evaluate model
 preds = model.feed_forward(np.array([[0, 0, 1]]))
-print(preds)
 

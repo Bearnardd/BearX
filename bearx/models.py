@@ -6,6 +6,7 @@ from bearx.tensor import Tensor
 from bearx.utils.data.DataLoader import DataLoader
 from bearx.losses import Loss, MSE
 from bearx.optimizers import Optimizer, SGD
+from bearx.callbacks.callbacks import History
 
 import numpy as np
 
@@ -17,6 +18,7 @@ class Sequential:
     def __init__(self) -> None:
         self.layers = []
         self.compiled = False
+        self.history = History()
 
     def add(self, layer: Layer):
         self.layers.append(layer)
@@ -93,8 +95,11 @@ class Sequential:
                 gradient = self.loss.gradient(preds, batch.targets)
                 self.back_propagation(gradient)
                 self.optimizer.step(self)
+            self.history.on_epoch_end(epoch, logs={"loss": loss})
             if verbose:
-                print(f"Epoch: {epoch}, Loss: {epoch_loss:.5f}")
+                pass
+                #print(f"Epoch: {epoch}, Loss: {epoch_loss:.5f}")
+        return self.history
 
     def save_weights(self, name):
         i = 0
