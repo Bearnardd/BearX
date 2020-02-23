@@ -18,7 +18,7 @@ class Sequential:
     def __init__(self) -> None:
         self.layers = []
         self.compiled = False
-        self.history = History()
+        #self.history = History()
 
     def add(self, layer: Layer):
         self.layers.append(layer)
@@ -82,10 +82,11 @@ class Sequential:
               inputs: Tensor,
               labels: Tensor,
               epochs: int = 5000,
-              verbose: bool = False) -> None:
+              verbose: bool = False) -> History:
         assert self.compiled, ("Before Training You have "
                                "to compile the model!")
         print("The Training have begun!")
+        history = History() 
         for epoch in range(epochs):
             epoch_loss = 0.0
             for batch in self.iterator(inputs, labels):
@@ -95,11 +96,10 @@ class Sequential:
                 gradient = self.loss.gradient(preds, batch.targets)
                 self.back_propagation(gradient)
                 self.optimizer.step(self)
-            self.history.on_epoch_end(epoch, logs={"loss": loss})
+            history.on_epoch_end(epoch, logs={"loss": loss})
             if verbose:
-                pass
-                #print(f"Epoch: {epoch}, Loss: {epoch_loss:.5f}")
-        return self.history
+                print(f"Epoch: {epoch}, Loss: {epoch_loss:.5f}")
+        return history
 
     def save_weights(self, name):
         i = 0

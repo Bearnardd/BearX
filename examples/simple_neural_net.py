@@ -4,7 +4,7 @@ sys.path.append("..")
 
 import numpy as np
 
-from bearx.layers import Tanh, Linear
+from bearx.layers import Tanh, Linear, Relu
 from bearx.models import Sequential 
 from bearx.losses import MSE
 from bearx.optimizers import SGD
@@ -26,7 +26,7 @@ outputs = np.array([0,1,1,0])
 # init sequential model
 model = Sequential()
 # add layers
-model.add(Linear(INPUT_SIZE, OUTPUT_SIZE, activation=Tanh()))
+model.add(Linear(INPUT_SIZE, OUTPUT_SIZE, activation=Relu()))
 #model.add(Tanh())
 #model.add(Linear(HIDDEN_SIZE, OUTPUT_SIZE))
 
@@ -42,9 +42,9 @@ model.compile(
 )
 
 # to train we just use train method
-history = model.train(inputs, outputs, 10000, verbose=True)
-print(history.history["loss"])
+history = model.train(inputs, outputs, 2000, verbose=True)
 
+# You can plot history of loss
 plt.plot(history.history["loss"])
 plt.show()
 

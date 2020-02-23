@@ -2,4 +2,5 @@ TODO:
     - add docs
     - add Dropout Layer
     - add predict method instead of feeding forward
-    - FIX PROBLEM WITH DIMENSIONS!!
+    - add layers like CNN, RNN
+    - try numba
