@@ -128,9 +128,8 @@ class Sequential:
         print("Weight Loaded Successfully!")
     
     def predict(self, x: Tensor) -> Tensor:
-        print(x)
-        print(len(x.shape))
         if len(x.shape) == 1:
             x = np.expand_dims(x, axis=0)
-        return x
+        preds = self.feed_forward(x)
+        return preds
     
