@@ -127,8 +127,10 @@ class Sequential:
             raise NotADirectoryError(f"Cant find a directory: {dir_path}")
         print("Weight Loaded Successfully!")
     
-    def predict(self, X: Tensor) -> Tensor:
-        if X.shape[0] < 2:
-            X = np.expand_dims(X, axis=0)
-        return X
+    def predict(self, x: Tensor) -> Tensor:
+        print(x)
+        print(len(x.shape))
+        if len(x.shape) == 1:
+            x = np.expand_dims(x, axis=0)
+        return x
     
