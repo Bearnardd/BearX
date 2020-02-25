@@ -77,7 +77,7 @@ class Sequential:
         self.optimizer = optimizer
         self.optimizer.lr = lr
         self.compiled = True
-
+    
     def train(self,
               inputs: Tensor,
               labels: Tensor,
@@ -126,3 +126,9 @@ class Sequential:
         else:
             raise NotADirectoryError(f"Cant find a directory: {dir_path}")
         print("Weight Loaded Successfully!")
+    
+    def predict(self, X: Tensor) -> Tensor:
+        if X.shape[0] < 2:
+            X = np.expand_dims(X, axis=0)
+        return X
+    
