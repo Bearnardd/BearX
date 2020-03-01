@@ -39,13 +39,16 @@ class Linear(Layer):
     output = inputs * weights + bias
     output = activation_function(output)
     """
-    def __init__(self,
-                 in_features: int,
-                 out_features: int,
-                 activation=None,
-                 **kwargs):
+    def __init__(
+            self,
+            in_features: int,
+            out_features: int,
+            activation=None,
+            **kwargs
+        ):
         super(Linear, self).__init__(**kwargs)
         # TODO: add activations
+        # remove selfing features:w
         self.activation = activation
         self.in_features = in_features
         self.out_features = out_features
@@ -100,6 +103,38 @@ class Linear(Layer):
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = self.inputs.T @ gradient
         return gradient @ self.params["W"].T
+
+
+class RNN(Layer):
+    def __init__(
+            self,
+            rnn_units: int,
+            in_features: int,
+            out_features: int,
+            **kwargs
+        ):
+        super(RNN, self).__init__()
+
+        allowed_kwargs = (
+            "weight_initializer"
+        )
+
+        for kwarg in kwargs:
+            if kwarg not in allowed_kwargs:
+                raise TypeError(f"Keyword not understood: {kwarg}")
+
+        self.weight_initializer = kwargs.get("weight_initializer", None)        
+
+        if self.weight_initializer is None:
+            self.params["W_xh"] = np.random.rand(
+                rnn_units, in_features
+            )
+            self.params["W_hh"] = np.random.rand(
+                rnn_units, rnn_units 
+            )
+            self.params["W_hy"] = np.random.rand(
+                out_features, rnn_units 
+            )
 
 
 class Activation(Layer):
