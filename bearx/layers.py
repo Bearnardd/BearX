@@ -4,9 +4,10 @@ import numpy as np
 
 # change it to *?
 from bearx.activations import (
-        relu, relu_prime, sigmoid, sigmoid_prime,
-        tanh, tanh_prime
-    )
+    relu, relu_prime, sigmoid, sigmoid_prime,
+    tanh, tanh_prime
+)
+
 
 class Layer:
     def __init__(self, **kwargs):
@@ -39,13 +40,14 @@ class Linear(Layer):
     output = inputs * weights + bias
     output = activation_function(output)
     """
+
     def __init__(
-            self,
-            in_features: int,
-            out_features: int,
-            activation=None,
-            **kwargs
-        ):
+        self,
+        in_features: int,
+        out_features: int,
+        activation=None,
+        **kwargs
+    ):
         super(Linear, self).__init__(**kwargs)
         # TODO: add activations
         # remove selfing features:w
@@ -107,34 +109,44 @@ class Linear(Layer):
 
 class RNN(Layer):
     def __init__(
-            self,
-            rnn_units: int,
-            in_features: int,
-            out_features: int,
-            **kwargs
-        ):
+        self,
+        rnn_units: int,
+        in_features: int,
+        out_features: int,
+        **kwargs
+    ):
         super(RNN, self).__init__()
 
         allowed_kwargs = (
             "weight_initializer"
         )
 
+        self.rnn_units = rnn_units
+
         for kwarg in kwargs:
             if kwarg not in allowed_kwargs:
                 raise TypeError(f"Keyword not understood: {kwarg}")
 
-        self.weight_initializer = kwargs.get("weight_initializer", None)        
+        self.weight_initializer = kwargs.get("weight_initializer", None)
 
         if self.weight_initializer is None:
             self.params["W_xh"] = np.random.rand(
                 rnn_units, in_features
             )
             self.params["W_hh"] = np.random.rand(
-                rnn_units, rnn_units 
+                rnn_units, rnn_units
             )
             self.params["W_hy"] = np.random.rand(
-                out_features, rnn_units 
+                out_features, rnn_units
             )
+
+    def __repr__(self):
+        output = (f"# of units: {self.rnn_units}\n"
+                  f"Shape of matrices: \n"
+                  f"W_xh: {self.params['W_xh'].shape} "
+                  f"W_hh: {self.params['W_hh'].shape} "
+                  f"W_hy: {self.params['W_hy'].shape}")
+        return output
 
 
 class Activation(Layer):
