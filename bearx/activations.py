@@ -1,21 +1,19 @@
-"""
-We are gonna start with simple
-and powerful activation function.
-Later on I am gonna add more functions
-"""
 from bearx.tensor import Tensor
+from bearx.losses import CrossEntropy
 
 import numpy as np
 
-# TODO: change sigmoid function 
+# TODO: change sigmoid function
+
+
 def relu(inputs: Tensor) -> Tensor:
     assert type(inputs) == np.ndarray, "Inputs have to be a Tensor(np.array)!"
-    return np.maximum(inputs, 0, inputs) 
+    return np.maximum(inputs, 0, inputs)
 
 
 def relu_prime(inputs: Tensor) -> Tensor:
     assert type(inputs) == np.ndarray, "Inputs have to be a Tensor(np.array)!"
-    return (inputs>0).astype(inputs.dtype)
+    return (inputs > 0).astype(inputs.dtype)
 
 
 def sigmoid(inputs: Tensor) -> Tensor:
@@ -26,7 +24,8 @@ def sigmoid(inputs: Tensor) -> Tensor:
 
 def sigmoid_prime(inputs: Tensor) -> Tensor:
     assert type(inputs) == np.ndarray, "Inputs have to be a Tensor(np.array)!"
-    inputs = [sigmoid(node) * (1 - sigmoid(node)) for node in range(len(inputs))]
+    inputs = [sigmoid(node) * (1 - sigmoid(node))
+              for node in range(len(inputs))]
     return np.array(inputs)
 
 
@@ -38,3 +37,37 @@ def tanh(x: Tensor) -> Tensor:
 def tanh_prime(x: Tensor) -> Tensor:
     y = tanh(x)
     return 1 - y ** 2
+
+
+def softmax(x: Tensor, axis=-1) -> Tensor:
+    if x.ndim == 2:
+        y = np.exp(x - np.max(x, axis, keepdims=True))
+        return y / np.sum(y, axis, keepdims=True)
+    elif ndim > 2:
+        e = np.exp(x - np.max(axis=axis, keepdims=True))
+        s = np.sum(e, axis=axis, keepdims=True)
+    else:
+        raise ValueError("Cannot apply softmax to a tensor that is 1D"
+                         f"Receiced input: {x}")
+
+def softmax_prime(x: Tensor, y: int):
+    probs = softmax(x)
+    probs[y] -= 1.0
+    return probs
+
+
+class Softmax:
+    def __init__(self, epsilon=1e-12) -> None:
+        self.epsilon = epsilon
+        self.ce = CrossEntropy()
+
+    def predict(self, x: Tensor) -> Tensor:
+        exp_scores = np.exp(x)
+        return exp_scores / np.sum(exp_scores)
+
+    def loss(self, preds: Tensor, targets: Tensor) -> Tensor:
+        """
+        Cross entropy
+        """
+        self.ce.loss(preds, targets, self.epsilon)
+        return -np.log(probs[y])

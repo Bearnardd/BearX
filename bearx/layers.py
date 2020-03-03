@@ -3,10 +3,7 @@ from bearx.tensor import Tensor
 import numpy as np
 
 # change it to *?
-from bearx.activations import (
-    relu, relu_prime, sigmoid, sigmoid_prime,
-    tanh, tanh_prime
-)
+from bearx.activations import *
 
 from bearx.gates import AddGate, MultiplyGate
 
@@ -175,7 +172,7 @@ class RNN(Layer):
         return output
         
     def backward():
-         
+        pass 
 
 
 class Activation(Layer):
@@ -208,3 +205,8 @@ class Sigmoid(Activation):
 class Tanh(Activation):
     def __init__(self):
         super(Tanh, self).__init__(tanh, tanh_prime)
+
+
+class Softmax(Activation):
+    def __init__(self):
+        super(Softmax, self).__init__(softmax, softmax_prime)

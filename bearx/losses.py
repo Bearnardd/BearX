@@ -43,8 +43,35 @@ class CrossEntropy(Loss):
     def loss(self, predicted: Tensor, target: Tensor, epsilon=1e-12) -> float:
         """
         Computes cross entropy between target and prediced
+        We compute cross entropy with the following formula:
+        -∑p[x] * log(q[x]) where p is the true distribution
+        and q is our predicted distribution. We can easily
+        notice that p will be one hot encoded vector with
+        0 everywhere except index of true label which will
+        be 1 so in fact cross entropy will be log of our
+        prediction that true label is in fact  true label
+        So our cross-entropy values will be between log(0)
+        if we predicted 0% on true label and log(1) when
+        our prediction was right. As You may know log(0) = infinity
+        and log(1) = 0. So we want to clip our prediction with some
+        epsilon to be sure that we avoid infinite loss which also
+        implies that we can never get an excat zero-valued loss.
+
+        @param: predicted (Tensor) -> tensor of our predictions
+
+        @param: target (Tensor) -> tensor of true distribution
+
+        @param: epsilon (float) -> small value we "add"(clip)
+                    to our predictions to avoid infinite loss
+
+        @return: cross entropy value (float) -> diffrnece in true
+                    and predicted distributions
         """
         predicted = np.clip(predicted, epsilon, 1 - epsilon)
         N = predicted.shape[0]
-        ce = -np.sum(target * np.log(predicted)) / N
+        ce = -np.sum(target * np.log(predicted))
         return ce
+
+    def backward(self, predicted: Tensor, true_label_idx: int) -> Tensor:
+        predicted[true_label_idx] -= 1
+        return predicted
