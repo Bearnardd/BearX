@@ -8,6 +8,8 @@ from bearx.activations import (
     tanh, tanh_prime
 )
 
+from bearx.gates import AddGate, MultiplyGate
+
 
 class Layer:
     def __init__(self, **kwargs):
@@ -122,6 +124,8 @@ class RNN(Layer):
         )
 
         self.rnn_units = rnn_units
+        self.mulGate = MultiplyGate()
+        self.addGate = AddGate()
 
         for kwarg in kwargs:
             if kwarg not in allowed_kwargs:
@@ -139,6 +143,8 @@ class RNN(Layer):
             self.params["W_hy"] = np.random.rand(
                 out_features, rnn_units
             )
+        
+        self.h = 0
 
     def __repr__(self):
         output = (f"# of units: {self.rnn_units}\n"
@@ -147,6 +153,24 @@ class RNN(Layer):
                   f"W_hh: {self.params['W_hh'].shape} "
                   f"W_hy: {self.params['W_hy'].shape}")
         return output
+
+    def feed_forward(self, inputs: Tensor) -> Tensor:
+        self.inputs = inputs
+        print(self.params["W_xh"] * inputs)
+        print(np.dot(inputs, self.params["W_xh"].T))
+        self.h = tanh(self.params["W_hh"] * self.h + self.params["W_xh"] * inputs)
+        output = self.params["W_hy"] * self.h
+        #print(output)#, self.h
+
+        self.inputs = inputs
+        mulU = self.mulGate.forward(self.params["W_xh"], inputs) 
+        print(mulU)
+        mulW = self.mulGate.forward(self.params["W_hh"], self.h)
+        add = self.addGate.forward(mulU, mulW)
+        activation = tanh(add)
+        output = self.mulGate.forward(self.params["W_hy"], activation) 
+        #print(output)
+        
 
 
 class Activation(Layer):
