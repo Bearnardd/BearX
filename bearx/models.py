@@ -54,7 +54,7 @@ class Sequential:
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
         for layer in reversed(self.layers):
-            gradient = layer.back_propagation(gradient)
+            gradient = layer.backward(gradient)
         return gradient
 
     def get_params_and_gradients(self):

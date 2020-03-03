@@ -29,7 +29,7 @@ class Layer:
             "Function not implemented in base class!"
         )
 
-    def back_prop(self, grad: Tensor) -> Tensor:
+    def backward(self, grad: Tensor) -> Tensor:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
@@ -98,7 +98,7 @@ class Linear(Layer):
             return self.activation.feed_forward(output)
         return output
 
-    def back_propagation(self, gradient: Tensor) -> Tensor:
+    def backward(self, gradient: Tensor) -> Tensor:
         """
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = np.multiply(self.inputs.T, gradient)
@@ -115,6 +115,7 @@ class RNN(Layer):
         rnn_units: int,
         in_features: int,
         out_features: int,
+        activation=tanh,
         **kwargs
     ):
         super(RNN, self).__init__()
@@ -171,8 +172,10 @@ class RNN(Layer):
         add = self.addGate.forward(mulU, mulW)
         self.params["state"]= tanh(add)
         output = self.mulGate.forward(self.params["V"], self.params["state"]) 
-        print(output)
+        return output
         
+    def backward():
+         
 
 
 class Activation(Layer):
@@ -188,7 +191,7 @@ class Activation(Layer):
         self.inputs = inputs
         return self.activation(inputs)
 
-    def back_propagation(self, gradient: Tensor) -> Tensor:
+    def backward(self, gradient: Tensor) -> Tensor:
         return self.activation_prime(self.inputs) * gradient
 
 
