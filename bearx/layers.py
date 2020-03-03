@@ -134,42 +134,44 @@ class RNN(Layer):
         self.weight_initializer = kwargs.get("weight_initializer", None)
 
         if self.weight_initializer is None:
-            self.params["W_xh"] = np.random.rand(
+            self.params["U"] = np.random.rand(
                 rnn_units, in_features
             )
-            self.params["W_hh"] = np.random.rand(
+            self.params["W"] = np.random.rand(
                 rnn_units, rnn_units
             )
-            self.params["W_hy"] = np.random.rand(
+            self.params["V"] = np.random.rand(
                 out_features, rnn_units
             )
         
-        self.h = 0
+        self.params["state"] = 0
 
     def __repr__(self):
         output = (f"# of units: {self.rnn_units}\n"
                   f"Shape of matrices: \n"
-                  f"W_xh: {self.params['W_xh'].shape} "
-                  f"W_hh: {self.params['W_hh'].shape} "
-                  f"W_hy: {self.params['W_hy'].shape}")
+                  f"U: {self.params['U'].shape} "
+                  f"W: {self.params['W'].shape} "
+                  f"V: {self.params['V'].shape}"
+                  f"State: {self.params['state'].shape}")
         return output
 
     def feed_forward(self, inputs: Tensor) -> Tensor:
+        """
         self.inputs = inputs
         print(self.params["W_xh"] * inputs)
         print(np.dot(inputs, self.params["W_xh"].T))
         self.h = tanh(self.params["W_hh"] * self.h + self.params["W_xh"] * inputs)
         output = self.params["W_hy"] * self.h
         #print(output)#, self.h
+        """
 
         self.inputs = inputs
-        mulU = self.mulGate.forward(self.params["W_xh"], inputs) 
-        print(mulU)
-        mulW = self.mulGate.forward(self.params["W_hh"], self.h)
+        mulU = self.mulGate.forward(self.params["U"], inputs) 
+        mulW = self.mulGate.forward(self.params["W"], self.params["state"])
         add = self.addGate.forward(mulU, mulW)
-        activation = tanh(add)
-        output = self.mulGate.forward(self.params["W_hy"], activation) 
-        #print(output)
+        self.params["state"]= tanh(add)
+        output = self.mulGate.forward(self.params["V"], self.params["state"]) 
+        print(output)
         
 
 
