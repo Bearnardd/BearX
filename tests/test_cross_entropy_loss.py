@@ -3,6 +3,7 @@ sys.path.append("..")
 
 import numpy as np
 from bearx.losses import CrossEntropy
+from bearx.activations import softmax, softmax_prime
 
 ce = CrossEntropy()
 
@@ -31,13 +32,22 @@ def test_backward():
 def test_model_with_softmax():
     from bearx.models import Sequential
     from bearx.layers import Linear, Softmax
+
+    inputs = np.array([[0.25, 0.63, 0.12]])
+    targets = np.array([0, 1, 0])
     
     model = Sequential()
     model.add(Linear(3, 3, activation=Softmax()))
-    model.compile()
-    x = model.predict(np.array([1, 2, 3]))
-    print(x)
+    predictions = model.feed_forward(inputs)
+    loss = ce.loss(predictions, targets)
+    for i in range(len(predictions)):
+        gradient = ce.backward(predictions[i], targets[i])
+        print("grad", gradient)
 
+    #model.back_propagation()
+
+    exit(0)
+    
 
 if __name__ == "__main__":
     #test_backward()

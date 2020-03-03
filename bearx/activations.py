@@ -43,17 +43,25 @@ def softmax(x: Tensor, axis=-1) -> Tensor:
     if x.ndim == 2:
         y = np.exp(x - np.max(x, axis, keepdims=True))
         return y / np.sum(y, axis, keepdims=True)
-    elif ndim > 2:
-        e = np.exp(x - np.max(axis=axis, keepdims=True))
+    elif x.ndim > 2:
+        e = np.exp(x - np.max(x, axis=axis, keepdims=True))
         s = np.sum(e, axis=axis, keepdims=True)
+        return e / s
     else:
-        raise ValueError("Cannot apply softmax to a tensor that is 1D"
+        raise ValueError("Cannot apply softmax to a tensor that is 1D\n"
                          f"Receiced input: {x}")
 
+"""
 def softmax_prime(x: Tensor, y: int):
     probs = softmax(x)
     probs[y] -= 1.0
     return probs
+"""
+
+def softmax_prime(x):
+    x = softmax(x)
+    s = x.reshape(-1, 1)
+    return np.diagflat(s) - np.dot(s, s.T)
 
 
 class Softmax:

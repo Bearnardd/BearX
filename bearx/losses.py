@@ -72,6 +72,6 @@ class CrossEntropy(Loss):
         ce = -np.sum(target * np.log(predicted))
         return ce
 
-    def backward(self, predicted: Tensor, true_label_idx: int) -> Tensor:
-        predicted[true_label_idx] -= 1
+    def backward(self, predicted: Tensor, target: int) -> Tensor:
+        predicted[target] -= 1
         return predicted
