@@ -2,10 +2,13 @@ from typing import Dict
 from bearx.tensor import Tensor
 import numpy as np
 
-# change it to *?
-from bearx.activations import *
+from bearx.activations import * 
 
 from bearx.gates import AddGate, MultiplyGate
+
+
+addGate = AddGate()
+mulGate = MultiplyGate()
 
 
 class Layer:
@@ -21,15 +24,47 @@ class Layer:
             "Function not implemented in base class!"
         )
 
-    def feed_forward(self, inputs: Tensor) -> Tensor:
+    def forward(self, inputs: Tensor) -> Tensor:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
 
-    def backward(self, grad: Tensor) -> Tensor:
+    def back_prop(self, grad: Tensor) -> Tensor:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
+
+
+class Activation(Layer):
+    def __init__(self, activation, activation_prime) -> None:
+        super(Activation, self).__init__()
+        self.activation = activation
+        self.activation_prime = activation_prime
+
+    def __repr__(self):
+        return {"activation": self.activation.__name__}
+
+    def forward(self, inputs: Tensor) -> Tensor:
+        self.inputs = inputs
+        return self.activation(inputs)
+
+    def backward(self, gradient: Tensor) -> Tensor:
+        return self.activation_prime(self.inputs) * gradient
+
+
+class Relu(Activation):
+    def __init__(self):
+        super(Relu, self).__init__(relu, relu_prime)
+
+
+class Sigmoid(Activation):
+    def __init__(self):
+        super(Sigmoid, self).__init__(sigmoid, sigmoid_prime)
+
+
+class Tanh(Activation):
+    def __init__(self):
+        super(Tanh, self).__init__(tanh, tanh_prime)
 
 
 class Linear(Layer):
@@ -72,15 +107,21 @@ class Linear(Layer):
         """
         Return information about layer
         """
+        output = (
+            f"in_features: {self.in_features}\n"
+            f"out_features: {self.out_features}\n"
+            f"activation: {self.activation.__class__.__name__ if self.activation is not None else 'None'}\n"
+        )
+        return output
         item = {
             "in_features": self.in_features,
             "out_features": self.out_features,
             "activation": (self.activation.__class__.__name__ if
-                           self.activation is not None else "None")
+                          self.activation is not None else "None")
         }
         return item
 
-    def feed_forward(self, inputs: Tensor) -> Tensor:
+    def forward(self, inputs: Tensor) -> Tensor:
         """
         element wise multiplication and addition
         :param: inputs: Tensor - input data
@@ -92,10 +133,10 @@ class Linear(Layer):
         self.inputs = inputs
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
-            return self.activation.feed_forward(output)
+            return self.activation.forward(output)
         return output
 
-    def backward(self, gradient: Tensor) -> Tensor:
+    def back_propagation(self, gradient: Tensor) -> Tensor:
         """
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = np.multiply(self.inputs.T, gradient)
@@ -108,22 +149,20 @@ class Linear(Layer):
 
 class RNN(Layer):
     def __init__(
-        self,
-        rnn_units: int,
-        in_features: int,
-        out_features: int,
-        activation=tanh,
-        **kwargs
-    ):
+            self,
+            rnn_units: int,
+            in_features: int,
+            out_features: int,
+            activation=Tanh(),
+            **kwargs
+        ):
         super(RNN, self).__init__()
+        self.activation = activation
+        self.rnn_units = rnn_units
 
         allowed_kwargs = (
             "weight_initializer"
         )
-
-        self.rnn_units = rnn_units
-        self.mulGate = MultiplyGate()
-        self.addGate = AddGate()
 
         for kwarg in kwargs:
             if kwarg not in allowed_kwargs:
@@ -142,71 +181,28 @@ class RNN(Layer):
                 out_features, rnn_units
             )
         
-        self.params["state"] = 0
+        self.state = 0
 
     def __repr__(self):
         output = (f"# of units: {self.rnn_units}\n"
                   f"Shape of matrices: \n"
-                  f"U: {self.params['U'].shape} "
-                  f"W: {self.params['W'].shape} "
-                  f"V: {self.params['V'].shape}"
-                  f"State: {self.params['state'].shape}")
+                  f"W_xh: {self.params['U'].shape} "
+                  f"W_hh: {self.params['W'].shape} "
+                  f"W_hy: {self.params['V'].shape}")
         return output
 
-    def feed_forward(self, inputs: Tensor) -> Tensor:
-        """
-        self.inputs = inputs
-        print(self.params["W_xh"] * inputs)
-        print(np.dot(inputs, self.params["W_xh"].T))
-        self.h = tanh(self.params["W_hh"] * self.h + self.params["W_xh"] * inputs)
-        output = self.params["W_hy"] * self.h
-        #print(output)#, self.h
-        """
+    def forward(self, x, prev_state) -> Tensor:
+        self.mulU = mulGate.forward(self.params["U"], x)
+        self.mulW = mulGate.forward(self.params["W"], prev_state)
+        self.add = addGate.forward(self.mulW, self.mulU)
+        self.state = self.activation.forward(self.add) 
+        self.mulV = mulGate.forward(self.params["V"], self.state)
 
-        self.inputs = inputs
-        mulU = self.mulGate.forward(self.params["U"], inputs) 
-        mulW = self.mulGate.forward(self.params["W"], self.params["state"])
-        add = self.addGate.forward(mulU, mulW)
-        self.params["state"]= tanh(add)
-        output = self.mulGate.forward(self.params["V"], self.params["state"]) 
-        return output
-        
-    def backward():
-        pass 
-
-
-class Activation(Layer):
-    def __init__(self, activation, activation_prime) -> None:
-        super(Activation, self).__init__()
-        self.activation = activation
-        self.activation_prime = activation_prime
-
-    def __repr__(self):
-        return {"activation": self.activation.__name__}
-
-    def feed_forward(self, inputs: Tensor) -> Tensor:
-        self.inputs = inputs
-        return self.activation(inputs)
-
-    def backward(self, gradient: Tensor) -> Tensor:
-        return self.activation_prime(self.inputs) * gradient
-
-
-class Relu(Activation):
-    def __init__(self):
-        super(Relu, self).__init__(relu, relu_prime)
-
-
-class Sigmoid(Activation):
-    def __init__(self):
-        super(Sigmoid, self).__init__(sigmoid, sigmoid_prime)
-
-
-class Tanh(Activation):
-    def __init__(self):
-        super(Tanh, self).__init__(tanh, tanh_prime)
-
-
-class Softmax(Activation):
-    def __init__(self):
-        super(Softmax, self).__init__(softmax, softmax_prime)
+    def backward(self, x, prev_state, diff_s, dmulV):
+        dV, dsv = mulGate.backward(self.params["V"], self.state, dmulV)
+        dh = dsv + diff_s
+        dadd = self.activation.backward(self.add, dh)
+        dmulW, dmulU = addGate.backward(self.mulW, self.mulU, dadd)
+        dW, dprev_S = mulGate.backward(self.params["W"], prev_state, dmulW)
+        dU, dx = mulGate.backward(self.params["U"], x, dmulU)
+        return (dprev_S, dU, dW, dV)

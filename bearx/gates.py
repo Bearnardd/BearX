@@ -2,6 +2,7 @@ from bearx.tensor import Tensor
 
 import numpy as np
 
+#TODO: dont know if it is gonna be Tensor
 
 class AddGate:
     def forward(self, x1: Tensor, x2: Tensor) -> Tensor:
