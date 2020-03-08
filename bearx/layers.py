@@ -150,15 +150,13 @@ class Linear(Layer):
 class RNN(Layer):
     def __init__(
             self,
-            rnn_units: int,
-            in_features: int,
-            out_features: int,
+            input_size: int,
+            hidden_size: int,
             activation=Tanh(),
             **kwargs
         ):
         super(RNN, self).__init__()
         self.activation = activation
-        self.rnn_units = rnn_units
 
         allowed_kwargs = (
             "weight_initializer"
@@ -197,6 +195,7 @@ class RNN(Layer):
         self.add = addGate.forward(self.mulW, self.mulU)
         self.state = self.activation.forward(self.add) 
         self.mulV = mulGate.forward(self.params["V"], self.state)
+        return mulV
 
     def backward(self, x, prev_state, diff_s, dmulV):
         dV, dsv = mulGate.backward(self.params["V"], self.state, dmulV)
