@@ -2,7 +2,7 @@ from typing import Dict
 from bearx.tensor import Tensor
 import numpy as np
 
-from bearx.activations import * 
+from bearx.activations import *
 
 from bearx.gates import AddGate, MultiplyGate
 
@@ -117,7 +117,7 @@ class Linear(Layer):
             "in_features": self.in_features,
             "out_features": self.out_features,
             "activation": (self.activation.__class__.__name__ if
-                          self.activation is not None else "None")
+                           self.activation is not None else "None")
         }
         return item
 
@@ -142,12 +142,32 @@ class Linear(Layer):
         self.grads["W"] = np.multiply(self.inputs.T, gradient)
         return np.multiply(gradient, self.params["W"].T)
         """
+
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = self.inputs.T @ gradient
         return gradient @ self.params["W"].T
 
 
+class Embedding(Layer):
+    """
+    Can only be used as the first layer in a model!
+    """
+
+    def __init__(self, input_dim, output_dim,
+                 embeddings_initializer='uniform',
+                 input_length=None,
+                 **kwargs):
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.input_length = input_length
+        self.embeddings_initializer = embeddings_initializer
+    
+    def _build(self):
+        pass
+
+
 class RNN(Layer):
+    """
     def __init__(
             self,
             input_size: int,
@@ -178,8 +198,10 @@ class RNN(Layer):
             self.params["V"] = np.random.rand(
                 out_features, rnn_units
             )
-        
+
         self.state = 0
+
+    """
 
     def __repr__(self):
         output = (f"# of units: {self.rnn_units}\n"
@@ -193,7 +215,7 @@ class RNN(Layer):
         self.mulU = mulGate.forward(self.params["U"], x)
         self.mulW = mulGate.forward(self.params["W"], prev_state)
         self.add = addGate.forward(self.mulW, self.mulU)
-        self.state = self.activation.forward(self.add) 
+        self.state = self.activation.forward(self.add)
         self.mulV = mulGate.forward(self.params["V"], self.state)
         return mulV
 
