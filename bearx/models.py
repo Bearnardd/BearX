@@ -1,12 +1,9 @@
-"""
-Let's start with simple Sequential model
-"""
-from bearx.layers import Layer
-from bearx.tensor import Tensor
-from bearx.utils.data.DataLoader import DataLoader
-from bearx.losses import Loss, MSE
-from bearx.optimizers import Optimizer, SGD
-from bearx.callbacks.callbacks import History
+from layers import Layer
+from tensor import Tensor
+from utils.data.DataLoader import DataLoader
+from losses import Loss, MSE
+from optimizers import Optimizer, SGD
+from callbacks.callbacks import History
 
 import numpy as np
 

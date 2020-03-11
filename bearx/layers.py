@@ -1,10 +1,11 @@
 from typing import Dict
-from bearx.tensor import Tensor
+from tensor import Tensor
 import numpy as np
 
-from bearx.activations import *
-
-from bearx.gates import AddGate, MultiplyGate
+#change it to import initializers??
+from activations import *
+from gates import AddGate, MultiplyGate
+from initializers import *
 
 
 addGate = AddGate()
@@ -154,16 +155,20 @@ class Embedding(Layer):
     """
 
     def __init__(self, input_dim, output_dim,
-                 embeddings_initializer='uniform',
+                 embeddings_initializer=RandomUniform(-0.05, 0.05),
                  input_length=None,
                  **kwargs):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.input_length = input_length
-        self.embeddings_initializer = embeddings_initializer
-    
-    def _build(self):
-        pass
+        self.embeddings = self._build(embeddings_initializer)
+
+    def _build(self, embeddings_initializer):
+        weight = embeddings_initializer(shape=(self.input_dim, self.output_dim))
+        return weight
+
+    def __repr__(self):
+        return f"Weight matrix:\n {self.embeddings}"
 
 
 class RNN(Layer):

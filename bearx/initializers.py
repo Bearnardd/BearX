@@ -1,4 +1,5 @@
 import numpy as np
+import six
 
 
 class Initializer:
@@ -49,12 +50,13 @@ class RandomNormalDist(Initializer):
     def cfg(self):
         return {"mean": self.mean, "std": self.std, "seed": self.seed}
 
+
 class RandomUniform(Initializer):
     def __init__(self, low, high, seed=None):
         self.low = low
         self.high = high
         self.seed = seed
-    
+
     def __call__(self, shape, dtype=None):
         if self.seed is not None:
             self.seed += 1
@@ -62,6 +64,27 @@ class RandomUniform(Initializer):
             dist = np.random.uniform(self.low, self.high, size=shape)
             return np.array(dist, dtype=dtype)
         return np.random.uniform(self.low, self.high, size=shape)
-    
+
     def cfg(self):
         return {"low": self.low, "high": self.high, "seed": self.seed}
+
+"""
+
+AVAIABLE_INITIALIZERS = [Ones, Zeros,
+                         Constant, RandomNormalDist, RandomUniform]
+
+
+def get(identifier):
+    if callable(identifier):
+        return identifier
+    elif isinstance(identifier, six.string_types):
+        for initializer in AVAIABLE_INITIALIZERS:
+            if identifier == initializer.__qualname__.lower():
+                return initializer()
+    elif isinstance(identifier, dict):
+        if int
+    else:
+        raise ValueError(
+            f"Could not interpret initializer identifier: {str(identifier)}"
+        )
+"""

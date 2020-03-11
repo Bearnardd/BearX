@@ -3,3 +3,4 @@ TODO:
     - think about converting activation functions to layers
     - add docs
     - change __repr__ funciton in linear layer
+    - add regulizers

@@ -1,5 +1,5 @@
-from bearx.tensor import Tensor
-from bearx.losses import CrossEntropy
+from tensor import Tensor
+from losses import CrossEntropy
 
 import numpy as np
 
