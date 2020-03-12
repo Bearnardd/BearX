@@ -11,8 +11,19 @@ def test_embedding_layer_output_shape():
     out = e(np.array([0,1]))
     assert out.shape == (2, 4)
 
+
 def test_embedding_layer_with_sequential_model():
     model = Sequential()
     model.add(Embedding(3, 6))
     output = model.feed_forward(np.array([0, 1, 2]))
+    print(output)
     assert output.shape == (3, 6)
+
+
+def test_embedding_layer_with_ndim_2_input():
+    model = Sequential()
+    model.add(Embedding(3, 6))
+    output = model.feed_forward(np.array([[0], [1], [2]]))
+    assert output.shape == (3, 1, 6)
+
+

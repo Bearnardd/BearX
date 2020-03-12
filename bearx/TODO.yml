@@ -4,3 +4,7 @@ TODO:
     - add docs
     - change __repr__ funciton in linear layer
     - add regulizers
+    - change layers to __call__??
+    - change model to use __call__??
+    - add Initializersto Linear layer
+    - add shape checking

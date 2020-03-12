@@ -32,7 +32,7 @@ class Sequential:
             for layer in self.layers:
                 name = layer.__class__.__name__
                 print(f"{name.upper()} (layer_{layer_idx})", end="\n")
-                print(layer.__repr__(), end="\n")
+                print(layer, end="\n")
                 layer_idx += 1
         else:
             print(20 * " " + "Model has no layers yet!")
@@ -46,7 +46,7 @@ class Sequential:
         transformed output
         """
         for layer in self.layers:
-            inputs = layer.feed_forward(inputs)
+            inputs = layer(inputs)
         return inputs
 
     def back_propagation(self, gradient: Tensor) -> Tensor:

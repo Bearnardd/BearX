@@ -2,10 +2,11 @@ from typing import Dict
 from tensor import Tensor
 import numpy as np
 
-#change it to import initializers??
+# change it to import initializers??
 from activations import *
 from gates import AddGate, MultiplyGate
 from initializers import *
+from backend import gather
 
 
 addGate = AddGate()
@@ -25,7 +26,7 @@ class Layer:
             "Function not implemented in base class!"
         )
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def __call__(self, inputs: Tensor) -> Tensor:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
@@ -114,6 +115,7 @@ class Linear(Layer):
             f"activation: {self.activation.__class__.__name__ if self.activation is not None else 'None'}\n"
         )
         return output
+        """
         item = {
             "in_features": self.in_features,
             "out_features": self.out_features,
@@ -121,8 +123,9 @@ class Linear(Layer):
                            self.activation is not None else "None")
         }
         return item
+        """
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def __call__(self, inputs: Tensor) -> Tensor:
         """
         element wise multiplication and addition
         :param: inputs: Tensor - input data
@@ -151,24 +154,41 @@ class Linear(Layer):
 
 class Embedding(Layer):
     """
-    Can only be used as the first layer in a model!
+    Turns indexes (integers) into dense vectors of given size
+
+    # Example:
+
+    ```python
+        model = Sequential()
+        model.add(Embedding(2, 2))
+
+    @param: input_dim
+
+    ---------------------------------------------------
+    | Can only be used as the first layer in a model! |
+    ---------------------------------------------------
     """
 
-    def __init__(self, input_dim, output_dim,
-                 embeddings_initializer=RandomUniform(-0.05, 0.05),
-                 input_length=None,
+    def __init__(self, input_dim: int, output_dim: int,
+                 embeddings_initializer: Initializer = RandomUniform(-0.05, 0.05),
                  **kwargs):
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.input_length = input_length
         self.embeddings = self._build(embeddings_initializer)
 
-    def _build(self, embeddings_initializer):
-        weight = embeddings_initializer(shape=(self.input_dim, self.output_dim))
+    def _build(self, embeddings_initializer) -> Tensor:
+        weight = embeddings_initializer(
+            shape=(self.input_dim, self.output_dim))
         return weight
 
-    def __repr__(self):
-        return f"Weight matrix:\n {self.embeddings}"
+    def __repr__(self) -> str:
+        return f"input_dim: {self.input_dim}, output_dim: {self.output_dim}"
+
+    def __call__(self, inputs: Tensor) -> Tensor:
+        if inputs.dtype != "int32":
+            inputs = inputs.astype('int32')
+        out = gather(self.embeddings, inputs)
+        return out
 
 
 class RNN(Layer):
