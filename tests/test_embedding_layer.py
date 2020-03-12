@@ -6,9 +6,7 @@ from models import Sequential
 
 import numpy as np
 
-
-#model = Sequential()
-#model.add(Embedding(2, 2))
-#model.skeleton()
-e = Embedding(2, 2)
-x = e(np.array([5, 2, 5]))
+def test_embedding_layer_output_shape():
+    e = Embedding(2, 4)
+    out  = e(np.array([0,1]))
+    assert out.shape == (2, 4)
