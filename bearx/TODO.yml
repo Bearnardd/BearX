@@ -2,7 +2,6 @@ TODO:
     - assert shape in sigmoid for example
     - think about converting activation functions to layers
     - add docs
-    - change __repr__ funciton in linear layer
     - add regulizers
     - change layers to __call__??
     - change model to use __call__??
