@@ -9,6 +9,7 @@ from initializers import *
 from backend import gather
 
 
+# TODO: think about better way to init gates
 addGate = AddGate()
 mulGate = MultiplyGate()
 
@@ -161,13 +162,14 @@ class Embedding(Layer):
     ```python
         model = Sequential()
         model.add(Embedding(2, 2))
+    ```
 
         |
         |
         v
 
         # the model will take as input matrix of shape (batch_size, input_length)
-
+        # and convert it into dense vectors of given size (output_dim)
 
     @param: input_dim (int) : size o the vocabulary -> max int index + 1
     @param: output_dim (int) : dimension of the dense embedding
@@ -202,13 +204,13 @@ class Embedding(Layer):
         return f"input_dim: {self.input_dim}, output_dim: {self.output_dim}"
 
     def display_embedding(self):
-        print(self.output_dim)
-        print("+-----------+" + self.output_dim * 13 *"-" + "+")
+        print("+-----------+" + self.output_dim * 13 * "-" + "+")
         print("|   index   |" + self.output_dim * 5 * " " + "Embedding")
-        print("+-----------+" + self.output_dim * 13 *"-" + "+")
+        print("+-----------+" + self.output_dim * 13 * "-" + "+")
         for idx, vector in enumerate(self.embeddings):
-            print("|     " + str(idx) + "     |" + self.output_dim * " " + str(vector))
-        print("+-----------+" + self.output_dim * 13 *"-" + "+")
+            print("|     " + str(idx) + "     |" +
+                  self.output_dim * " " + str(vector))
+        print("+-----------+" + self.output_dim * 13 * "-" + "+")
 
     def __call__(self, inputs: Tensor) -> Tensor:
         try:
@@ -221,49 +223,58 @@ class Embedding(Layer):
                 "Inputs have to be type Tensor (np.array)!"
             )
 
-class RNN(Layer):
+
+class Flatten(Layer):
     """
+    Flatten output of for example Embedding layer to be able to
+    pass it through Linear layer (Dense/Fully Connected)
+
+    # Example
+
+    ```python
+        model = Sequential()
+        model.add(Embedding(2, 2))
+        model.add(Flatten)
+    ```
+        |
+        |
+        v
+
+    # as the output we got tensor with shape (4,)
+    # so we flattened out, output from Embedding layer which was (2, 2)
+    """
+
+    def __call__(self, inputs: Tensor) -> Tensor:
+        return inputs.flatten()
+
+
+class RNN(Layer):
     def __init__(
-            self,
-            input_size: int,
-            hidden_size: int,
-            activation=Tanh(),
-            **kwargs
-        ):
+        self,
+        input_size: int,
+        hidden_units: int,
+        activation=Tanh(),
+        **kwargs
+    ):
         super(RNN, self).__init__()
         self.activation = activation
-
-        allowed_kwargs = (
+        # TODO: add arguments
+        allowed_kwargs = [
             "weight_initializer"
-        )
-
+        ]
         for kwarg in kwargs:
             if kwarg not in allowed_kwargs:
                 raise TypeError(f"Keyword not understood: {kwarg}")
 
-        self.weight_initializer = kwargs.get("weight_initializer", None)
-
-        if self.weight_initializer is None:
-            self.params["U"] = np.random.rand(
-                rnn_units, in_features
-            )
-            self.params["W"] = np.random.rand(
-                rnn_units, rnn_units
-            )
-            self.params["V"] = np.random.rand(
-                out_features, rnn_units
-            )
-
-        self.state = 0
-
-    """
+        self.weight_initializer = kwargs.get(
+            "weight_initializer", RNNinit(input_size, hidden_units))
 
     def __repr__(self):
-        output = (f"# of units: {self.rnn_units}\n"
-                  f"Shape of matrices: \n"
-                  f"W_xh: {self.params['U'].shape} "
-                  f"W_hh: {self.params['W'].shape} "
-                  f"W_hy: {self.params['V'].shape}")
+        output = (
+            f"Shape of matrices: \n"
+            f"W_xh: {self.params['U'].shape} "
+            f"W_hh: {self.params['W'].shape} "
+            f"W_hy: {self.params['V'].shape}")
         return output
 
     def forward(self, x, prev_state) -> Tensor:
@@ -282,3 +293,6 @@ class RNN(Layer):
         dW, dprev_S = mulGate.backward(self.params["W"], prev_state, dmulW)
         dU, dx = mulGate.backward(self.params["U"], x, dmulU)
         return (dprev_S, dU, dW, dV)
+
+    def __call__(self, X: Tensor) -> Tensor
+        pass

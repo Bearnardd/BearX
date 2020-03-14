@@ -31,10 +31,6 @@ def test_embedding_layer_show_matrix_function():
     e = Embedding(5, 2)
     print("\n")
     e.display_embedding()
-    e = Embedding(5, 3)
-    e.display_embedding()
-    e = Embedding(5, 4)
-    e.display_embedding()
 
 
 

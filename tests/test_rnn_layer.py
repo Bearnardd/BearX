@@ -1,11 +1,11 @@
 import sys
-sys.path.append("..")
+sys.path.append("../bearx")
 
-from bearx.layers import RNN
+from layers import RNN
 import numpy as np
 
-x = np.array([1,1])
-rnn = RNN(1, 2, 1)
-rnn
-x = rnn.forward(x, rnn.state)
-print(x)
+
+def test_repr_function():
+    x = np.array([1,1])
+    rnn = RNN(1, 2, 1)
+    rnn

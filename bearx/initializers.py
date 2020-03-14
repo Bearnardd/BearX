@@ -68,6 +68,32 @@ class RandomUniform(Initializer):
     def cfg(self):
         return {"low": self.low, "high": self.high, "seed": self.seed}
 
+
+class RNNinit(Initializer):
+    """
+    turns out that the best weight initialization is random in interval
+    from -1/sqrt(n) to 1/sqrt(n) where n is the number of incoming connections
+    from the previous layer
+    """
+
+    def __init__(self, word_dim: int, hidden_dim: int) -> None:
+        self.word_dim = word_dim
+        self.hidden_dim = hidden_dim
+        self.U = np.random.uniform(-np.sqrt(1. / self.word_dim), np.sqrt(
+            1. / self.word_dim), size=(self.hidden_dim, self.word_dim))
+        self.W = np.random.uniform(-np.sqrt(1. / self.hidden_dim), np.sqrt(
+            1. / self.hidden_dim), size=(self.hidden_dim, self.hidden_dim))
+        self.V = np.random.uniform(-np.sqrt(1. / self.hidden_dim), np.sqrt(
+            1. / self.hidden_dim), size=(self.hidden_dim, self.hidden_dim))
+
+    def cfg(self):
+        return {
+            "U": self.U,
+            "W": self.W,
+            "V": self.V
+        }
+
+
 """
 
 AVAIABLE_INITIALIZERS = [Ones, Zeros,
