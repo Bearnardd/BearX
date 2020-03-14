@@ -7,3 +7,4 @@ TODO:
     - change model to use __call__??
     - add Initializersto Linear layer
     - add shape checking
+    - add validating embedding layer to be only first

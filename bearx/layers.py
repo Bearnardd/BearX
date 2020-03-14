@@ -162,7 +162,20 @@ class Embedding(Layer):
         model = Sequential()
         model.add(Embedding(2, 2))
 
-    @param: input_dim
+        |
+        |
+        v
+        
+        # the model will take as input
+
+
+    @param: input_dim (int) : size o the vocabulary -> max int index + 1
+    @param: output_dim (int) : dimension of the dense embedding
+    @param: embeddings_initializer (Initializer) : initializer for embeddings matrix
+    @param: input_length (int) : length of input sequences [if they are constant, else None]
+
+    @__call__: return array of dense arrays -> convert indices to vectors of random numbers picked
+    from given distribution
 
     ---------------------------------------------------
     | Can only be used as the first layer in a model! |
@@ -171,9 +184,11 @@ class Embedding(Layer):
 
     def __init__(self, input_dim: int, output_dim: int,
                  embeddings_initializer: Initializer = RandomUniform(-0.05, 0.05),
+                 input_length: int = None,
                  **kwargs):
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.input_length = input_length
         self.embeddings = self._build(embeddings_initializer)
 
     def _build(self, embeddings_initializer) -> Tensor:
