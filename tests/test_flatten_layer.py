@@ -14,7 +14,7 @@ def test_flatten_layer():
         [3, 4]
     ])
     out = f(inputs)
-    print(out)
+    assert out.shape == (4,)
 
 
 def test_flatten_layer_with_model():
@@ -25,5 +25,5 @@ def test_flatten_layer_with_model():
 
     inputs = np.array([0, 1])
     out = model.feed_forward(inputs)
-    print(out)
+    assert out.shape == (1,)
 
