@@ -165,8 +165,8 @@ class Embedding(Layer):
         |
         |
         v
-        
-        # the model will take as input
+
+        # the model will take as input matrix of shape (batch_size, input_length)
 
 
     @param: input_dim (int) : size o the vocabulary -> max int index + 1
@@ -176,6 +176,8 @@ class Embedding(Layer):
 
     @__call__: return array of dense arrays -> convert indices to vectors of random numbers picked
     from given distribution
+
+    # TODO: add example    
 
     ---------------------------------------------------
     | Can only be used as the first layer in a model! |
@@ -199,12 +201,25 @@ class Embedding(Layer):
     def __repr__(self) -> str:
         return f"input_dim: {self.input_dim}, output_dim: {self.output_dim}"
 
-    def __call__(self, inputs: Tensor) -> Tensor:
-        if inputs.dtype != "int32":
-            inputs = inputs.astype('int32')
-        out = gather(self.embeddings, inputs)
-        return out
+    def display_embedding(self):
+        print(self.output_dim)
+        print("+-----------+" + self.output_dim * 13 *"-" + "+")
+        print("|   index   |" + self.output_dim * 5 * " " + "Embedding")
+        print("+-----------+" + self.output_dim * 13 *"-" + "+")
+        for idx, vector in enumerate(self.embeddings):
+            print("|     " + str(idx) + "     |" + self.output_dim * " " + str(vector))
+        print("+-----------+" + self.output_dim * 13 *"-" + "+")
 
+    def __call__(self, inputs: Tensor) -> Tensor:
+        try:
+            if inputs.dtype != "int32":
+                inputs = inputs.astype('int32')
+            out = gather(self.embeddings, inputs)
+            return out
+        except:
+            raise AttributeError(
+                "Inputs have to be type Tensor (np.array)!"
+            )
 
 class RNN(Layer):
     """
