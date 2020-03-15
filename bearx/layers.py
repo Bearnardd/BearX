@@ -6,7 +6,7 @@ import numpy as np
 from activations import *
 from gates import AddGate, MultiplyGate
 from initializers import *
-from backend import gather
+from backend import gather, Softmax
 
 
 class Layer:
@@ -243,7 +243,6 @@ class Flatten(Layer):
         return inputs.flatten()
 
 
-
         # RNN's
 "------------------------------------------------------------------------------------------------------------------------"
 
@@ -310,4 +309,30 @@ class RNN(Layer):
                   self.params["U"], self.params["W"], self.params["V"])
             prev_state = layer.state
             layers.append(layer)
-        return layers
+        return np.asarray(layers)
+
+    def predict(self, x):
+        output = Softmax()
+        layers = self(x)
+        return [np.argmax(output.predict(layer.mulV)) for layer in layers]
+
+    def backward(self, x, y):
+        """
+        output = Softmax()
+        dU = np.zeros(self.U.shape)
+        dW = np.zeros(self.W.shape)
+        dV = np.zeros(self.V.shape)
+
+        T = len(gradient)
+        prev_s_t = np.zeros(self.hidden_units)
+        diff_s = np.zeros(self.hidden_units)
+        for t in range(0, T):
+            dmulV = output.diff(layers[t].mulv, y[t])
+            inpt = np.zeros(self.input_size)
+            input[x[t]] = 1
+            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(
+                input, prev_s_t, self.U, self.W, self.V, diff_s, dmulV)
+            prev_s_t = layers[t].state
+            dmulV = np.zeros(self.input_size)
+            for i in range(t-1, max(-1, t-)):
+        """

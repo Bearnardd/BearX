@@ -21,6 +21,13 @@ def test_forward_propagation():
     inputs = np.array([1, 2])
     rnn = RNN(1, 2)
     output = rnn(inputs)
-    for layer in output:
-        print("\n")
-        print(layer.state)
+    assert output.shape == (2,)
+
+
+def test_forward_prediction_function():
+    inputs = np.array([1, 2])
+    rnn = RNN(1, 2)
+    output = rnn.predict(inputs)
+    print(output)
+
+
