@@ -8,3 +8,4 @@ TODO:
     - add Initializersto Linear layer
     - add shape checking
     - add validating embedding layer to be only first
+    - add gates to backend??

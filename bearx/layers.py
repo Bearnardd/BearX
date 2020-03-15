@@ -9,11 +9,6 @@ from initializers import *
 from backend import gather
 
 
-# TODO: think about better way to init gates
-addGate = AddGate()
-mulGate = MultiplyGate()
-
-
 class Layer:
     def __init__(self, **kwargs):
         """
@@ -248,6 +243,26 @@ class Flatten(Layer):
         return inputs.flatten()
 
 
+
+        # RNN's
+"------------------------------------------------------------------------------------------------------------------------"
+
+addGate = AddGate()
+mulGate = MultiplyGate()
+
+
+class RNNCell:
+    def __init__(self, activation=Tanh()):
+        self.activation = activation
+
+    def __call__(self, x, prev_state, U, W, V):
+        self.mulU = mulGate.forward(U, x)
+        self.mulW = mulGate.forward(W, prev_state)
+        self.add = addGate.forward(self.mulW, self.mulU)
+        self.state = self.activation.forward(self.add)
+        self.mulV = mulGate.forward(V, self.state)
+
+
 class RNN(Layer):
     def __init__(
         self,
@@ -258,10 +273,15 @@ class RNN(Layer):
     ):
         super(RNN, self).__init__()
         self.activation = activation
+        # TODO: think if I need those
+        self.input_size = input_size
+        self.hidden_units = hidden_units
+
         # TODO: add arguments
         allowed_kwargs = [
             "weight_initializer"
         ]
+
         for kwarg in kwargs:
             if kwarg not in allowed_kwargs:
                 raise TypeError(f"Keyword not understood: {kwarg}")
@@ -269,30 +289,25 @@ class RNN(Layer):
         self.weight_initializer = kwargs.get(
             "weight_initializer", RNNinit(input_size, hidden_units))
 
+        self.params["U"], self.params["W"], self.params["V"] = self.weight_initializer()
+
     def __repr__(self):
         output = (
-            f"Shape of matrices: \n"
-            f"W_xh: {self.params['U'].shape} "
-            f"W_hh: {self.params['W'].shape} "
-            f"W_hy: {self.params['V'].shape}")
+            f"Shape of weight matrices: \n"
+            f"  W_xh: {self.params['U'].shape}\n"
+            f"  W_hh: {self.params['W'].shape}\n"
+            f"  W_hy: {self.params['V'].shape}\n"
+            f"  W_initializer: {self.weight_initializer.__class__.__name__}")
         return output
 
-    def forward(self, x, prev_state) -> Tensor:
-        self.mulU = mulGate.forward(self.params["U"], x)
-        self.mulW = mulGate.forward(self.params["W"], prev_state)
-        self.add = addGate.forward(self.mulW, self.mulU)
-        self.state = self.activation.forward(self.add)
-        self.mulV = mulGate.forward(self.params["V"], self.state)
-        return mulV
-
-    def backward(self, x, prev_state, diff_s, dmulV):
-        dV, dsv = mulGate.backward(self.params["V"], self.state, dmulV)
-        dh = dsv + diff_s
-        dadd = self.activation.backward(self.add, dh)
-        dmulW, dmulU = addGate.backward(self.mulW, self.mulU, dadd)
-        dW, dprev_S = mulGate.backward(self.params["W"], prev_state, dmulW)
-        dU, dx = mulGate.backward(self.params["U"], x, dmulU)
-        return (dprev_S, dU, dW, dV)
-
-    def __call__(self, X: Tensor) -> Tensor
-        pass
+    def __call__(self, inputs: Tensor) -> Tensor:
+        # number of time steps
+        layers = []
+        prev_state = np.zeros(self.hidden_units)
+        for seq in inputs:
+            layer = RNNCell(self.activation)
+            layer(seq, prev_state,
+                  self.params["U"], self.params["W"], self.params["V"])
+            prev_state = layer.state
+            layers.append(layer)
+        return layers
