@@ -9,3 +9,4 @@ TODO:
     - add shape checking
     - add validating embedding layer to be only first
     - add gates to backend??
+    - add RNN(Layer) so all rnn's layers can inherit

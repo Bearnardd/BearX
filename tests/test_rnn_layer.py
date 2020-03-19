@@ -25,9 +25,24 @@ def test_forward_propagation():
 
 
 def test_forward_prediction_function():
-    inputs = np.array([1, 2])
-    rnn = RNN(1, 2)
-    output = rnn.predict(inputs)
-    print(output)
+    inputs = np.array([0, 1, 2])
+    rnn = RNN(3, 3)
+    RNNcells = rnn.forward(inputs)
+    assert RNNcells.shape == (3,)
+
+def test_calculate_loss_function():
+    inputs = np.array([0, 1, 2])
+    targets = np.array([2, 3, 4])
+    rnn = RNN(1, 3)
+    loss = rnn.calculate_loss(inputs, targets)
+    print(loss)
+
+def test_bptt_function():
+    inputs = np.array([0, 1, 2])
+    targets = np.array([0, 1, 2])
+    rnn = RNN(3, 3)
+    rnn.bptt(inputs, targets)
+    
+
 
 

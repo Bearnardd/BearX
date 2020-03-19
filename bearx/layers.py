@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Tuple
 from tensor import Tensor
 import numpy as np
 
@@ -124,7 +124,7 @@ class Linear(Layer):
     def __call__(self, inputs: Tensor) -> Tensor:
         """
         element wise multiplication and addition
-        :param: inputs: Tensor - input data
+        :param: inputs: Tensor - inpt data
         :return: output matrix with activation function applied
         """
         # both methods give the same results
@@ -163,13 +163,13 @@ class Embedding(Layer):
         |
         v
 
-        # the model will take as input matrix of shape (batch_size, input_length)
+        # the model will take as inpt matrix of shape (batch_size, inpt_length)
         # and convert it into dense vectors of given size (output_dim)
 
-    @param: input_dim (int) : size o the vocabulary -> max int index + 1
+    @param: inpt_dim (int) : size o the vocabulary -> max int index + 1
     @param: output_dim (int) : dimension of the dense embedding
     @param: embeddings_initializer (Initializer) : initializer for embeddings matrix
-    @param: input_length (int) : length of input sequences [if they are constant, else None]
+    @param: inpt_length (int) : length of inpt sequences [if they are constant, else None]
 
     @__call__: return array of dense arrays -> convert indices to vectors of random numbers picked
     from given distribution
@@ -181,22 +181,22 @@ class Embedding(Layer):
     ---------------------------------------------------
     """
 
-    def __init__(self, input_dim: int, output_dim: int,
+    def __init__(self, inpt_dim: int, output_dim: int,
                  embeddings_initializer: Initializer = RandomUniform(-0.05, 0.05),
-                 input_length: int = None,
+                 inpt_length: int = None,
                  **kwargs):
-        self.input_dim = input_dim
+        self.inpt_dim = inpt_dim
         self.output_dim = output_dim
-        self.input_length = input_length
+        self.inpt_length = inpt_length
         self.embeddings = self._build(embeddings_initializer)
 
     def _build(self, embeddings_initializer) -> Tensor:
         weight = embeddings_initializer(
-            shape=(self.input_dim, self.output_dim))
+            shape=(self.inpt_dim, self.output_dim))
         return weight
 
     def __repr__(self) -> str:
-        return f"input_dim: {self.input_dim}, output_dim: {self.output_dim}"
+        return f"inpt_dim: {self.inpt_dim}, output_dim: {self.output_dim}"
 
     def display_embedding(self):
         print("+-----------+" + self.output_dim * 13 * "-" + "+")
@@ -242,9 +242,8 @@ class Flatten(Layer):
     def __call__(self, inputs: Tensor) -> Tensor:
         return inputs.flatten()
 
+        # RNN's "------------------------------------------------------------------------------------------------------------------------"
 
-        # RNN's
-"------------------------------------------------------------------------------------------------------------------------"
 
 addGate = AddGate()
 mulGate = MultiplyGate()
@@ -253,28 +252,46 @@ mulGate = MultiplyGate()
 class RNNCell:
     def __init__(self, activation=Tanh()):
         self.activation = activation
+        self.state = 0
 
-    def __call__(self, x, prev_state, U, W, V):
+    def __call__(self, x, prev_state, U, W, V) -> None:
         self.mulU = mulGate.forward(U, x)
         self.mulW = mulGate.forward(W, prev_state)
         self.add = addGate.forward(self.mulW, self.mulU)
         self.state = self.activation.forward(self.add)
         self.mulV = mulGate.forward(V, self.state)
 
+    def backward(self, x, prev_s, U, W, V, diff_s, dmulV) -> Tuple:
+        self(x, prev_s, U, W, V)
+        dV, dsv = mulGate.backward(V, self.state, dmulV)
+        ds = dsv + diff_s
+        dadd = self.activation.backward(self.add)
+        dmulw, dmulu = addGate.backward(self.mulW, self.mulU, dadd)
+        dW, dprev_s = mulGate.backward(W, prev_s, dmulw)
+        dU, dx = mulGate.backward(U, x, dmulu)
+        return (dprev_s, dU, dW, dV)
+        
+
 
 class RNN(Layer):
     def __init__(
         self,
         input_size: int,
-        hidden_units: int,
+        hidden_dim: int,
+        return_sequences: bool = False,
+        return_state: bool = False,
         activation=Tanh(),
         **kwargs
     ):
         super(RNN, self).__init__()
-        self.activation = activation
         # TODO: think if I need those
         self.input_size = input_size
-        self.hidden_units = hidden_units
+        self.hidden_dim = hidden_dim
+        self.return_sequences = return_sequences
+        self.return_state = return_state
+        self.activation = activation
+        self.bptt_truncate = 4
+        self.weight_initializer = RNNinit(input_size, hidden_dim)
 
         # TODO: add arguments
         allowed_kwargs = [
@@ -285,54 +302,75 @@ class RNN(Layer):
             if kwarg not in allowed_kwargs:
                 raise TypeError(f"Keyword not understood: {kwarg}")
 
-        self.weight_initializer = kwargs.get(
-            "weight_initializer", RNNinit(input_size, hidden_units))
+        #self.weight_initializer = kwargs.get(
+        #    "weight_initializer", RNNinit(input_size, hidden_dim))
 
         self.params["U"], self.params["W"], self.params["V"] = self.weight_initializer()
 
     def __repr__(self):
         output = (
-            f"Shape of weight matrices: \n"
-            f"  W_xh: {self.params['U'].shape}\n"
-            f"  W_hh: {self.params['W'].shape}\n"
-            f"  W_hy: {self.params['V'].shape}\n"
+            f"Shapes of weight matrices: \n"
+            f"  U: {self.params['U'].shape}\n"
+            f"  W: {self.params['W'].shape}\n"
+            f"  V: {self.params['V'].shape}\n"
             f"  W_initializer: {self.weight_initializer.__class__.__name__}")
         return output
 
     def __call__(self, inputs: Tensor) -> Tensor:
         # number of time steps
-        layers = []
-        prev_state = np.zeros(self.hidden_units)
-        for seq in inputs:
+        T = len(inputs)
+        RNNcells= []
+        prev_state = np.zeros(self.hidden_dim)
+        for t in range(T):
             layer = RNNCell(self.activation)
-            layer(seq, prev_state,
+            inpt = np.zeros(self.input_size)
+            inpt[inputs[t]] = 1
+            layer(inpt, prev_state,
                   self.params["U"], self.params["W"], self.params["V"])
             prev_state = layer.state
-            layers.append(layer)
-        return np.asarray(layers)
+            RNNcells.append(layer)
+        return np.asarray(RNNcells) 
 
     def predict(self, x):
         output = Softmax()
         layers = self(x)
-        return [np.argmax(output.predict(layer.mulV)) for layer in layers]
+        return [np.argmax(output(layer.mulV)) for layer in layers]
 
-    def backward(self, x, y):
-        """
+    def bptt(self, x, y):
+        assert len(x) == len(y)
         output = Softmax()
-        dU = np.zeros(self.U.shape)
-        dW = np.zeros(self.W.shape)
-        dV = np.zeros(self.V.shape)
+        layers = self(x)
+        dU = np.zeros(self.params["U"].shape)
+        dV = np.zeros(self.params["V"].shape)
+        dW = np.zeros(self.params["W"].shape)
 
-        T = len(gradient)
-        prev_s_t = np.zeros(self.hidden_units)
-        diff_s = np.zeros(self.hidden_units)
+        T = len(layers)
+        prev_s_t = np.zeros(self.hidden_dim)
+        diff_s = np.zeros(self.hidden_dim)
         for t in range(0, T):
-            dmulV = output.diff(layers[t].mulv, y[t])
+            dmulv = output.diff(layers[t].mulV, y[t])
             inpt = np.zeros(self.input_size)
-            input[x[t]] = 1
-            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(
-                input, prev_s_t, self.U, self.W, self.V, diff_s, dmulV)
+            inpt[x[t]] = 1
+            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulv)
             prev_s_t = layers[t].state
-            dmulV = np.zeros(self.input_size)
-            for i in range(t-1, max(-1, t-)):
-        """
+            dmulv = np.zeros(self.input_size)
+            for i in range(t-1, max(-1, t-self.bptt_truncate-1), -1):
+                inpt = np.zeros(self.input_size)
+                inpt[x[i]] = 1
+                prev_s_i = np.zeros(self.hidden_dim) if i == 0 else layers[i-1].state
+                dprev_s, dU_i, dW_i, dV_i = layers[i].backward(inpt, prev_s_i, self.params["U"], self.params["W"], self.params["V"], dprev_s, dmulv)
+                dU_t += dU_i
+                dW_t += dW_i
+            dV += dV_t
+            dU += dU_t
+            dW += dW_t
+
+    def calculate_loss(self, x, y):
+        assert len(x) == len(y), "Lengths of x and y are not the same!"
+        output = Softmax()
+        layers = self(x)
+        print(len(layers))
+        loss = 0.0
+        for i, layer in enumerate(layers):
+            loss += output.loss(layer.mulV, y[i])
+        return loss / float(len(y))

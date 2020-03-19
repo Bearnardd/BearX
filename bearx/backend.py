@@ -6,15 +6,17 @@ def gather(reference, indices):
 
 
 class Softmax:
-    def predict(self, x):
+    def __call__(self, x):
         exp_scores = np.exp(x)
         return exp_scores / np.sum(exp_scores)
 
     def loss(self, x, y):
-        probs = self.predict(x)
+        print(x)
+        print(y)
+        probs = self(x)
         return -np.log(probs[y])
 
     def diff(self, x, y):
-        probs = self.predict(x)
+        probs = self(x)
         probs[y] -= 1.0
         return probs
