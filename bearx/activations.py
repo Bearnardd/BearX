@@ -77,5 +77,5 @@ class Softmax:
         """
         Cross entropy
         """
-        self.ce.loss(preds, targets, self.epsilon)
-        return -np.log(preds[y])
+        loss = self.ce.loss(preds, targets, self.epsilon)
+        return loss 

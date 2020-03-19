@@ -25,6 +25,7 @@ class MultiplyGate:
         return np.dot(W, x)
 
     def backward(self, W: Tensor, x: Tensor, dz: Tensor) -> Tensor:
-        dW = np.asarray(np.dot(np.transpose(np.asmatrix(dz)), np.asmatrix(x)))
+        # dW = np.asarray(np.dot(np.transpose(np.asmatrix(dz)), np.asmatrix(x)))
+        dW = np.dot(np.expand_dims(dz, axis=1), np.expand_dims(x, axis=0))
         dx = np.dot(np.transpose(W), dz)
         return dW, dx

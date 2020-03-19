@@ -269,7 +269,8 @@ class RNNCell:
         dmulw, dmulu = addGate.backward(self.mulW, self.mulU, dadd)
         dW, dprev_s = mulGate.backward(W, prev_s, dmulw)
         dU, dx = mulGate.backward(U, x, dmulu)
-        return (dprev_s, dU, dW, dV)
+        return (1, 2, 3, 4)
+        #return (dprev_s, dU, dW, dV)
         
 
 
@@ -329,7 +330,7 @@ class RNN(Layer):
                   self.params["U"], self.params["W"], self.params["V"])
             prev_state = layer.state
             RNNcells.append(layer)
-        return np.asarray(RNNcells) 
+        return np.asarray(RNNcells)
 
     def predict(self, x):
         output = Softmax()
@@ -352,6 +353,7 @@ class RNN(Layer):
             inpt = np.zeros(self.input_size)
             inpt[x[t]] = 1
             dprev_s, dU_t, dW_t, dV_t = layers[t].backward(inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulv)
+            """
             prev_s_t = layers[t].state
             dmulv = np.zeros(self.input_size)
             for i in range(t-1, max(-1, t-self.bptt_truncate-1), -1):
@@ -364,12 +366,12 @@ class RNN(Layer):
             dV += dV_t
             dU += dU_t
             dW += dW_t
+            """
 
     def calculate_loss(self, x, y):
         assert len(x) == len(y), "Lengths of x and y are not the same!"
         output = Softmax()
         layers = self(x)
-        print(len(layers))
         loss = 0.0
         for i, layer in enumerate(layers):
             loss += output.loss(layer.mulV, y[i])

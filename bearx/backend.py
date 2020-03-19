@@ -11,8 +11,6 @@ class Softmax:
         return exp_scores / np.sum(exp_scores)
 
     def loss(self, x, y):
-        print(x)
-        print(y)
         probs = self(x)
         return -np.log(probs[y])
 
