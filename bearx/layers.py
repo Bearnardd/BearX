@@ -12,7 +12,8 @@ from backend import gather, Softmax
 class Layer:
     def __init__(self, **kwargs):
         """
-        Layer base class
+        Layers base class. All layers avaiable
+        in bearx inherit from it.
         """
         self.params: Dict[str, Tensor] = {}
         self.grads: Dict[str, Tensor] = {}
@@ -353,7 +354,6 @@ class RNN(Layer):
             inpt = np.zeros(self.input_size)
             inpt[x[t]] = 1
             dprev_s, dU_t, dW_t, dV_t = layers[t].backward(inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulv)
-            """
             prev_s_t = layers[t].state
             dmulv = np.zeros(self.input_size)
             for i in range(t-1, max(-1, t-self.bptt_truncate-1), -1):
@@ -366,7 +366,10 @@ class RNN(Layer):
             dV += dV_t
             dU += dU_t
             dW += dW_t
-            """
+
+        self.grads["V"] = dV
+        self.grads["U"] = dU
+        self.grads["W"] = dW
 
     def calculate_loss(self, x, y):
         assert len(x) == len(y), "Lengths of x and y are not the same!"

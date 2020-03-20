@@ -57,3 +57,13 @@ def test_bptt_function():
     targets = np.array([1, 2, 0])
     rnn = RNN(3, 3)
     rnn.bptt(inputs, targets)
+
+
+def test_rnn_params_gradients():
+    inputs = np.array([[0, 1, 2, 3], [2, 2, 3, 3]])
+    targets = np.array([[3, 0, 1, 2], [1, 3, 2, 1]])
+    rnn = RNN(4, 4)
+    rnn.bptt(inputs, targets)
+    print(rnn.params)
+    print('\n')
+    print(rnn.grads)

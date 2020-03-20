@@ -49,7 +49,7 @@ class CrossEntropy(Loss):
         notice that p will be one hot encoded vector with
         0 everywhere except index of true label which will
         be 1 so in fact cross entropy will be log of our
-        prediction that true label is in fact  true label
+        prediction that true label is in fact true label
         So our cross-entropy values will be between log(0)
         if we predicted 0% on true label and log(1) when
         our prediction was right. As You may know log(0) = infinity
@@ -67,9 +67,11 @@ class CrossEntropy(Loss):
         @return: cross entropy value (float) -> diffrnece in true
                     and predicted distributions
         """
+        assert len(predicted) == len(target), "Lenghts of predicted and target have to be te same"
         predicted = np.clip(predicted, epsilon, 1 - epsilon)
         N = predicted.shape[0]
-        ce = -np.sum(target * np.log(predicted))
+        #ce = -np.sum(target * np.log(predicted))
+        ce = -np.sum(target @ np.log(predicted))
         return ce
 
     def backward(self, predicted: Tensor, target: int) -> Tensor:
