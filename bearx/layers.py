@@ -1,12 +1,16 @@
-from typing import Dict, Tuple
-from tensor import Tensor
 import numpy as np
+import sys
 
 # change it to import initializers??
-from activations import *
-from gates import AddGate, MultiplyGate
-from initializers import *
-from backend import gather, Softmax
+from bearx.activations import *
+from bearx.gates import AddGate, MultiplyGate
+from bearx.initializers import Initializer, RNNinit, RandomUniform
+from bearx.backend import gather, Softmax
+from bearx.tensor import Tensor
+
+from datetime import datetime
+
+from typing import Dict, Tuple
 
 
 class Layer:
@@ -28,7 +32,7 @@ class Layer:
             "Function not implemented in base class!"
         )
 
-    def back_prop(self, grad: Tensor) -> Tensor:
+    def backward(self, grad: Tensor) -> Tensor:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
@@ -43,7 +47,7 @@ class Activation(Layer):
     def __repr__(self):
         return {"activation": self.activation.__name__}
 
-    def forward(self, inputs: Tensor) -> Tensor:
+    def __call__(self, inputs: Tensor) -> Tensor:
         self.inputs = inputs
         return self.activation(inputs)
 
@@ -112,15 +116,6 @@ class Linear(Layer):
             f"activation: {self.activation.__class__.__name__ if self.activation is not None else 'None'}\n"
         )
         return output
-        """
-        item = {
-            "in_features": self.in_features,
-            "out_features": self.out_features,
-            "activation": (self.activation.__class__.__name__ if
-                           self.activation is not None else "None")
-        }
-        return item
-        """
 
     def __call__(self, inputs: Tensor) -> Tensor:
         """
@@ -186,6 +181,8 @@ class Embedding(Layer):
                  embeddings_initializer: Initializer = RandomUniform(-0.05, 0.05),
                  inpt_length: int = None,
                  **kwargs):
+        super(Embedding, self).__init__()
+
         self.inpt_dim = inpt_dim
         self.output_dim = output_dim
         self.inpt_length = inpt_length
@@ -243,8 +240,8 @@ class Flatten(Layer):
     def __call__(self, inputs: Tensor) -> Tensor:
         return inputs.flatten()
 
-        # RNN's "------------------------------------------------------------------------------------------------------------------------"
 
+"--------------------------------------------------------------------------------------------------------------"
 
 addGate = AddGate()
 mulGate = MultiplyGate()
@@ -259,7 +256,7 @@ class RNNCell:
         self.mulU = mulGate.forward(U, x)
         self.mulW = mulGate.forward(W, prev_state)
         self.add = addGate.forward(self.mulW, self.mulU)
-        self.state = self.activation.forward(self.add)
+        self.state = self.activation(self.add)
         self.mulV = mulGate.forward(V, self.state)
 
     def backward(self, x, prev_s, U, W, V, diff_s, dmulV) -> Tuple:
@@ -270,8 +267,7 @@ class RNNCell:
         dmulw, dmulu = addGate.backward(self.mulW, self.mulU, dadd)
         dW, dprev_s = mulGate.backward(W, prev_s, dmulw)
         dU, dx = mulGate.backward(U, x, dmulu)
-        return (1, 2, 3, 4)
-        #return (dprev_s, dU, dW, dV)
+        return dprev_s, dU, dW, dV
         
 
 
@@ -321,7 +317,7 @@ class RNN(Layer):
     def __call__(self, inputs: Tensor) -> Tensor:
         # number of time steps
         T = len(inputs)
-        RNNcells= []
+        rnn_cells= []
         prev_state = np.zeros(self.hidden_dim)
         for t in range(T):
             layer = RNNCell(self.activation)
@@ -330,8 +326,8 @@ class RNN(Layer):
             layer(inpt, prev_state,
                   self.params["U"], self.params["W"], self.params["V"])
             prev_state = layer.state
-            RNNcells.append(layer)
-        return np.asarray(RNNcells)
+            rnn_cells.append(layer)
+        return np.asarray(rnn_cells)
 
     def predict(self, x):
         output = Softmax()
@@ -366,10 +362,36 @@ class RNN(Layer):
             dV += dV_t
             dU += dU_t
             dW += dW_t
-
-        self.grads["V"] = dV
+        # TODO: change the way grads are updated
         self.grads["U"] = dU
         self.grads["W"] = dW
+        self.grads["V"] = dV
+
+    def sgd_step(self, x, y, learning_rate):
+        self.bptt(x, y)
+        self.params["U"] -= learning_rate * self.grads["U"]
+        self.params["W"] -= learning_rate * self.grads["W"]
+        self.params["V"] -= learning_rate * self.grads["V"]
+
+    def train(self, X, Y, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
+        num_examples_seen = 0
+        losses = []
+        for epoch in range(nepoch):
+            if epoch % evaluate_loss_after == 0:
+                loss = self.calculate_total_loss(X, Y)
+                losses.append((num_examples_seen, loss))
+                time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
+                # Adjust the learning rate if loss increases
+                if len(losses) > 1 and losses[-1][1] > losses[-2][1]:
+                    learning_rate = learning_rate * 0.5
+                    print("Setting learning rate to %f" % learning_rate)
+                sys.stdout.flush()
+            # For each training example...
+            for i in range(len(Y)):
+                self.sgd_step(X[i], Y[i], learning_rate)
+                num_examples_seen += 1
+        return losses
 
     def calculate_loss(self, x, y):
         assert len(x) == len(y), "Lengths of x and y are not the same!"
@@ -379,3 +401,9 @@ class RNN(Layer):
         for i, layer in enumerate(layers):
             loss += output.loss(layer.mulV, y[i])
         return loss / float(len(y))
+
+    def calculate_total_loss(self, X, Y):
+        loss = 0.0
+        for i in range(len(Y)):
+            loss += self.calculate_loss(X[i], Y[i])
+        return loss / float(len(Y))
