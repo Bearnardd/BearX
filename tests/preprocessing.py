@@ -47,9 +47,6 @@ def getSentenceData(path, vocabulary_size=8000):
     X_train = np.asarray([[word_to_index[w] for w in sent[:-1]] for sent in tokenized_sentences])
     y_train = np.asarray([[word_to_index[w] for w in sent[1:]] for sent in tokenized_sentences])
 
-    print("X_train shape: " + str(X_train.shape))
-    print("y_train shape: " + str(y_train.shape))
-
     # Print an training data example
     x_example, y_example = X_train[17], y_train[17]
     print("x:\n%s\n%s" % (" ".join([index_to_word[x] for x in x_example]), x_example))

@@ -1,6 +1,6 @@
 import numpy as np
 import sys
-sys.path.append("../bearX")
+sys.path.append("../bearx/")
 
 from preprocessing import getSentenceData
 from layers import RNN

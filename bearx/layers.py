@@ -2,11 +2,11 @@ import numpy as np
 import sys
 
 # change it to import initializers??
-from bearx.activations import *
-from bearx.gates import AddGate, MultiplyGate
-from bearx.initializers import Initializer, RNNinit, RandomUniform
-from bearx.backend import gather, Softmax
-from bearx.tensor import Tensor
+from activations import *
+from gates import AddGate, MultiplyGate
+from initializers import Initializer, RNNinit, RandomUniform
+from backend import gather, Softmax
+from tensor import Tensor
 
 from datetime import datetime
 
@@ -339,24 +339,24 @@ class RNN(Layer):
         output = Softmax()
         layers = self(x)
         dU = np.zeros(self.params["U"].shape)
-        dV = np.zeros(self.params["V"].shape)
         dW = np.zeros(self.params["W"].shape)
+        dV = np.zeros(self.params["V"].shape)
 
         T = len(layers)
         prev_s_t = np.zeros(self.hidden_dim)
         diff_s = np.zeros(self.hidden_dim)
         for t in range(0, T):
-            dmulv = output.diff(layers[t].mulV, y[t])
+            dmulV = output.diff(layers[t].mulV, y[t])
             inpt = np.zeros(self.input_size)
             inpt[x[t]] = 1
-            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulv)
+            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulV)
             prev_s_t = layers[t].state
-            dmulv = np.zeros(self.input_size)
+            dmulV = np.zeros(self.input_size)
             for i in range(t-1, max(-1, t-self.bptt_truncate-1), -1):
                 inpt = np.zeros(self.input_size)
                 inpt[x[i]] = 1
                 prev_s_i = np.zeros(self.hidden_dim) if i == 0 else layers[i-1].state
-                dprev_s, dU_i, dW_i, dV_i = layers[i].backward(inpt, prev_s_i, self.params["U"], self.params["W"], self.params["V"], dprev_s, dmulv)
+                dprev_s, dU_i, dW_i, dV_i = layers[i].backward(inpt, prev_s_i, self.params["U"], self.params["W"], self.params["V"], dprev_s, dmulV)
                 dU_t += dU_i
                 dW_t += dW_i
             dV += dV_t
@@ -379,6 +379,7 @@ class RNN(Layer):
         for epoch in range(nepoch):
             if epoch % evaluate_loss_after == 0:
                 loss = self.calculate_total_loss(X, Y)
+                print(loss)
                 losses.append((num_examples_seen, loss))
                 time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
@@ -395,10 +396,16 @@ class RNN(Layer):
 
     def calculate_loss(self, x, y):
         assert len(x) == len(y), "Lengths of x and y are not the same!"
+        print("X", x)
+        print("Y", y)
         output = Softmax()
         layers = self(x)
         loss = 0.0
         for i, layer in enumerate(layers):
+            print(i, layer)
+            print(layer.mulV)
+            if i == 3:
+                exit(0)
             loss += output.loss(layer.mulV, y[i])
         return loss / float(len(y))
 

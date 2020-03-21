@@ -12,6 +12,9 @@ class Softmax:
 
     def loss(self, x, y):
         probs = self(x)
+        print(probs)
+        print(x)
+        print(y)
         return -np.log(probs[y])
 
     def diff(self, x, y):

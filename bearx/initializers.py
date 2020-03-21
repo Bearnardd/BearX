@@ -86,7 +86,7 @@ class RNNinit(Initializer):
         W = np.random.uniform(-np.sqrt(1. / self.hidden_dim), np.sqrt(
             1. / self.hidden_dim), size=(self.hidden_dim, self.hidden_dim))
         V = np.random.uniform(-np.sqrt(1. / self.hidden_dim), np.sqrt(
-            1. / self.hidden_dim), size=(self.hidden_dim, self.hidden_dim))
+            1. / self.hidden_dim), size=(self.word_dim, self.hidden_dim))
         return U, W, V
 
     def cfg(self):
