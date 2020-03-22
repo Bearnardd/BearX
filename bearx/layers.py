@@ -268,7 +268,6 @@ class RNNCell:
         dW, dprev_s = mulGate.backward(W, prev_s, dmulw)
         dU, dx = mulGate.backward(U, x, dmulu)
         return dprev_s, dU, dW, dV
-        
 
 
 class RNN(Layer):
@@ -300,24 +299,27 @@ class RNN(Layer):
             if kwarg not in allowed_kwargs:
                 raise TypeError(f"Keyword not understood: {kwarg}")
 
-        #self.weight_initializer = kwargs.get(
+        # self.weight_initializer = kwargs.get(
         #    "weight_initializer", RNNinit(input_size, hidden_dim))
 
         self.params["U"], self.params["W"], self.params["V"] = self.weight_initializer()
+        self.grads["U"] = np.zeros(self.params["U"].shape)
+        self.grads["W"] = np.zeros(self.params["W"].shape)
+        self.grads["V"] = np.zeros(self.params["V"].shape)
 
-    def __repr__(self):
-        output = (
-            f"Shapes of weight matrices: \n"
-            f"  U: {self.params['U'].shape}\n"
-            f"  W: {self.params['W'].shape}\n"
-            f"  V: {self.params['V'].shape}\n"
-            f"  W_initializer: {self.weight_initializer.__class__.__name__}")
-        return output
+        def __repr__(self):
+            output = (
+                f"Shapes of weight matrices: \n"
+                f"  U: {self.params['U'].shape}\n"
+                f"  W: {self.params['W'].shape}\n"
+                f"  V: {self.params['V'].shape}\n"
+                f"  W_initializer: {self.weight_initializer.__class__.__name__}")
+            return output
 
     def __call__(self, inputs: Tensor) -> Tensor:
         # number of time steps
         T = len(inputs)
-        rnn_cells= []
+        rnn_cells = []
         prev_state = np.zeros(self.hidden_dim)
         for t in range(T):
             layer = RNNCell(self.activation)
@@ -325,6 +327,8 @@ class RNN(Layer):
             inpt[inputs[t]] = 1
             layer(inpt, prev_state,
                   self.params["U"], self.params["W"], self.params["V"])
+            if t == T - 1:
+                print("U", self.params["U"])
             prev_state = layer.state
             rnn_cells.append(layer)
         return np.asarray(rnn_cells)
@@ -338,9 +342,6 @@ class RNN(Layer):
         assert len(x) == len(y)
         output = Softmax()
         layers = self(x)
-        dU = np.zeros(self.params["U"].shape)
-        dW = np.zeros(self.params["W"].shape)
-        dV = np.zeros(self.params["V"].shape)
 
         T = len(layers)
         prev_s_t = np.zeros(self.hidden_dim)
@@ -349,23 +350,25 @@ class RNN(Layer):
             dmulV = output.diff(layers[t].mulV, y[t])
             inpt = np.zeros(self.input_size)
             inpt[x[t]] = 1
-            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulV)
+            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(
+                inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulV)
             prev_s_t = layers[t].state
             dmulV = np.zeros(self.input_size)
             for i in range(t-1, max(-1, t-self.bptt_truncate-1), -1):
                 inpt = np.zeros(self.input_size)
                 inpt[x[i]] = 1
-                prev_s_i = np.zeros(self.hidden_dim) if i == 0 else layers[i-1].state
-                dprev_s, dU_i, dW_i, dV_i = layers[i].backward(inpt, prev_s_i, self.params["U"], self.params["W"], self.params["V"], dprev_s, dmulV)
+                prev_s_i = np.zeros(
+                    self.hidden_dim) if i == 0 else layers[i-1].state
+                dprev_s, dU_i, dW_i, dV_i = layers[i].backward(
+                    inpt, prev_s_i, self.params["U"], self.params["W"], self.params["V"], dprev_s, dmulV)
                 dU_t += dU_i
                 dW_t += dW_i
-            dV += dV_t
-            dU += dU_t
-            dW += dW_t
-        # TODO: change the way grads are updated
-        self.grads["U"] = dU
-        self.grads["W"] = dW
-        self.grads["V"] = dV
+            self.grads["U"] += dU_t
+            self.grads["W"] += dW_t
+            self.grads["V"] += dV_t
+            #dV += dV_t
+            #dU += dU_t
+            #dW += dW_t
 
     def sgd_step(self, x, y, learning_rate):
         self.bptt(x, y)
@@ -373,16 +376,31 @@ class RNN(Layer):
         self.params["W"] -= learning_rate * self.grads["W"]
         self.params["V"] -= learning_rate * self.grads["V"]
 
+    def calculate_loss(self, x, y):
+        assert len(x) == len(y), "Lengths of x and y are not the same!"
+        output = Softmax()
+        layers = self(x)
+        loss = 0.0
+        for i, layer in enumerate(layers):
+            loss += output.loss(layer.mulV, y[i])
+        return loss / float(len(y))
+
+    def calculate_total_loss(self, X, Y):
+        loss = 0.0
+        for i in range(len(Y)):
+            loss += self.calculate_loss(X[i], Y[i])
+        return loss / float(len(Y))
+
     def train(self, X, Y, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
         num_examples_seen = 0
         losses = []
         for epoch in range(nepoch):
             if epoch % evaluate_loss_after == 0:
                 loss = self.calculate_total_loss(X, Y)
-                print(loss)
                 losses.append((num_examples_seen, loss))
                 time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print("%s: Loss after num_examples_seen=%d epoch=%d: %f" % (time, num_examples_seen, epoch, loss))
+                print("%s: Loss after num_examples_seen=%d epoch=%d: %f" %
+                      (time, num_examples_seen, epoch, loss))
                 # Adjust the learning rate if loss increases
                 if len(losses) > 1 and losses[-1][1] > losses[-2][1]:
                     learning_rate = learning_rate * 0.5
@@ -393,24 +411,3 @@ class RNN(Layer):
                 self.sgd_step(X[i], Y[i], learning_rate)
                 num_examples_seen += 1
         return losses
-
-    def calculate_loss(self, x, y):
-        assert len(x) == len(y), "Lengths of x and y are not the same!"
-        print("X", x)
-        print("Y", y)
-        output = Softmax()
-        layers = self(x)
-        loss = 0.0
-        for i, layer in enumerate(layers):
-            print(i, layer)
-            print(layer.mulV)
-            if i == 3:
-                exit(0)
-            loss += output.loss(layer.mulV, y[i])
-        return loss / float(len(y))
-
-    def calculate_total_loss(self, X, Y):
-        loss = 0.0
-        for i in range(len(Y)):
-            loss += self.calculate_loss(X[i], Y[i])
-        return loss / float(len(Y))
