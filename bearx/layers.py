@@ -3,8 +3,7 @@ import sys
 
 # change it to import initializers??
 from activations import *
-from gates import AddGate, MultiplyGate
-from initializers import Initializer, RNNinit, RandomUniform
+from initializers import Initializer, RNNinit, RandomUniform, Zeros, Ones, RandomNormalDist
 from backend import gather, Softmax
 from tensor import Tensor
 
@@ -12,6 +11,8 @@ from datetime import datetime
 
 from typing import Dict, Tuple
 
+
+# TODO: add parameters function to Linear layer
 
 class Layer:
     def __init__(self, **kwargs):
@@ -36,6 +37,12 @@ class Layer:
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
+
+    def parameters(self):
+        """
+        Return number of parameters in the layer
+        """
+        return 0
 
 
 class Activation(Layer):
@@ -68,6 +75,20 @@ class Sigmoid(Activation):
 class Tanh(Activation):
     def __init__(self):
         super(Tanh, self).__init__(tanh, tanh_prime)
+
+
+activation_functions = {
+    "relu": Relu,
+    "tanh": Tanh
+}
+
+weight_initializers = {
+    "ones": Ones,
+    "zeros": Zeros,
+    "uniform": RandomUniform,
+    "normal": RandomNormalDist,
+    "rnn": RNNinit,
+}
 
 
 class Linear(Layer):
@@ -170,7 +191,7 @@ class Embedding(Layer):
     @__call__: return array of dense arrays -> convert indices to vectors of random numbers picked
     from given distribution
 
-    # TODO: add example    
+    # TODO: add example
 
     ---------------------------------------------------
     | Can only be used as the first layer in a model! |
@@ -243,171 +264,41 @@ class Flatten(Layer):
 
 "--------------------------------------------------------------------------------------------------------------"
 
-addGate = AddGate()
-mulGate = MultiplyGate()
-
-
-class RNNCell:
-    def __init__(self, activation=Tanh()):
-        self.activation = activation
-        self.state = 0
-
-    def __call__(self, x, prev_state, U, W, V) -> None:
-        self.mulU = mulGate.forward(U, x)
-        self.mulW = mulGate.forward(W, prev_state)
-        self.add = addGate.forward(self.mulW, self.mulU)
-        self.state = self.activation(self.add)
-        self.mulV = mulGate.forward(V, self.state)
-
-    def backward(self, x, prev_s, U, W, V, diff_s, dmulV) -> Tuple:
-        self(x, prev_s, U, W, V)
-        dV, dsv = mulGate.backward(V, self.state, dmulV)
-        ds = dsv + diff_s
-        dadd = self.activation.backward(self.add)
-        dmulw, dmulu = addGate.backward(self.mulW, self.mulU, dadd)
-        dW, dprev_s = mulGate.backward(W, prev_s, dmulw)
-        dU, dx = mulGate.backward(U, x, dmulu)
-        return dprev_s, dU, dW, dV
-
 
 class RNN(Layer):
-    def __init__(
-        self,
-        input_size: int,
-        hidden_dim: int,
-        return_sequences: bool = False,
-        return_state: bool = False,
-        activation=Tanh(),
-        **kwargs
-    ):
+    def __init__(self, input_size:  int, hidden_units: int, activation='tanh', bptt_trunc=4, weight_initializer='rnn'):
         super(RNN, self).__init__()
-        # TODO: think if I need those
         self.input_size = input_size
-        self.hidden_dim = hidden_dim
-        self.return_sequences = return_sequences
-        self.return_state = return_state
-        self.activation = activation
-        self.bptt_truncate = 4
-        self.weight_initializer = RNNinit(input_size, hidden_dim)
+        self.hidden_units = hidden_units
+        self.activation = activation_functions[activation]()
+        self.bptt_trunc = bptt_trunc
+        self.weight_initializer = weight_initializers[weight_initializer](
+            input_size, hidden_units)
 
-        # TODO: add arguments
-        allowed_kwargs = [
-            "weight_initializer"
-        ]
-
-        for kwarg in kwargs:
-            if kwarg not in allowed_kwargs:
-                raise TypeError(f"Keyword not understood: {kwarg}")
-
-        # self.weight_initializer = kwargs.get(
-        #    "weight_initializer", RNNinit(input_size, hidden_dim))
-
+        # init weights matrixes
         self.params["U"], self.params["W"], self.params["V"] = self.weight_initializer()
-        self.grads["U"] = np.zeros(self.params["U"].shape)
-        self.grads["W"] = np.zeros(self.params["W"].shape)
-        self.grads["V"] = np.zeros(self.params["V"].shape)
+        self.grads["U"] = np.zeros_like(self.params["U"])
+        self.grads["W"] = np.zeros_like(self.params["W"])
+        self.grads["V"] = np.zeros_like(self.params["V"])
 
-        def __repr__(self):
-            output = (
-                f"Shapes of weight matrices: \n"
-                f"  U: {self.params['U'].shape}\n"
-                f"  W: {self.params['W'].shape}\n"
-                f"  V: {self.params['V'].shape}\n"
-                f"  W_initializer: {self.weight_initializer.__class__.__name__}")
-            return output
+    def __repr__(self):
+        output = (
+            f"Shapes of weight matrices: \n"
+            f"  U: {self.params['U'].shape}\n"
+            f"  W: {self.params['W'].shape}\n"
+            f"  V: {self.params['V'].shape}\n"
+            f"W_initializer: {self.weight_initializer.__class__.__name__}\n"
+            f"Number of params: {self.parameters()}")
+        return output
+
+    def parameters(self):
+        return np.prod(self.params["U"].shape) + np.prod(self.params["W"].shape) + np.prod(self.params["V"].shape)
 
     def __call__(self, inputs: Tensor) -> Tensor:
-        # number of time steps
-        T = len(inputs)
-        rnn_cells = []
-        prev_state = np.zeros(self.hidden_dim)
-        for t in range(T):
-            layer = RNNCell(self.activation)
-            inpt = np.zeros(self.input_size)
-            inpt[inputs[t]] = 1
-            layer(inpt, prev_state,
-                  self.params["U"], self.params["W"], self.params["V"])
-            if t == T - 1:
-                print("U", self.params["U"])
-            prev_state = layer.state
-            rnn_cells.append(layer)
-        return np.asarray(rnn_cells)
-
-    def predict(self, x):
-        output = Softmax()
-        layers = self(x)
-        return [np.argmax(output(layer.mulV)) for layer in layers]
-
-    def bptt(self, x, y):
-        assert len(x) == len(y)
-        output = Softmax()
-        layers = self(x)
-
-        T = len(layers)
-        prev_s_t = np.zeros(self.hidden_dim)
-        diff_s = np.zeros(self.hidden_dim)
-        for t in range(0, T):
-            dmulV = output.diff(layers[t].mulV, y[t])
-            inpt = np.zeros(self.input_size)
-            inpt[x[t]] = 1
-            dprev_s, dU_t, dW_t, dV_t = layers[t].backward(
-                inpt, prev_s_t, self.params["U"], self.params["W"], self.params["V"], diff_s, dmulV)
-            prev_s_t = layers[t].state
-            dmulV = np.zeros(self.input_size)
-            for i in range(t-1, max(-1, t-self.bptt_truncate-1), -1):
-                inpt = np.zeros(self.input_size)
-                inpt[x[i]] = 1
-                prev_s_i = np.zeros(
-                    self.hidden_dim) if i == 0 else layers[i-1].state
-                dprev_s, dU_i, dW_i, dV_i = layers[i].backward(
-                    inpt, prev_s_i, self.params["U"], self.params["W"], self.params["V"], dprev_s, dmulV)
-                dU_t += dU_i
-                dW_t += dW_i
-            self.grads["U"] += dU_t
-            self.grads["W"] += dW_t
-            self.grads["V"] += dV_t
-            #dV += dV_t
-            #dU += dU_t
-            #dW += dW_t
-
-    def sgd_step(self, x, y, learning_rate):
-        self.bptt(x, y)
-        self.params["U"] -= learning_rate * self.grads["U"]
-        self.params["W"] -= learning_rate * self.grads["W"]
-        self.params["V"] -= learning_rate * self.grads["V"]
-
-    def calculate_loss(self, x, y):
-        assert len(x) == len(y), "Lengths of x and y are not the same!"
-        output = Softmax()
-        layers = self(x)
-        loss = 0.0
-        for i, layer in enumerate(layers):
-            loss += output.loss(layer.mulV, y[i])
-        return loss / float(len(y))
-
-    def calculate_total_loss(self, X, Y):
-        loss = 0.0
-        for i in range(len(Y)):
-            loss += self.calculate_loss(X[i], Y[i])
-        return loss / float(len(Y))
-
-    def train(self, X, Y, learning_rate=0.005, nepoch=100, evaluate_loss_after=5):
-        num_examples_seen = 0
-        losses = []
-        for epoch in range(nepoch):
-            if epoch % evaluate_loss_after == 0:
-                loss = self.calculate_total_loss(X, Y)
-                losses.append((num_examples_seen, loss))
-                time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                print("%s: Loss after num_examples_seen=%d epoch=%d: %f" %
-                      (time, num_examples_seen, epoch, loss))
-                # Adjust the learning rate if loss increases
-                if len(losses) > 1 and losses[-1][1] > losses[-2][1]:
-                    learning_rate = learning_rate * 0.5
-                    print("Setting learning rate to %f" % learning_rate)
-                sys.stdout.flush()
-            # For each training example...
-            for i in range(len(Y)):
-                self.sgd_step(X[i], Y[i], learning_rate)
-                num_examples_seen += 1
-        return losses
+        if len(inputs.shape) == 1:
+            raise ValueError(
+                f"Wrong input shape, should be (timesteps, input_dim) or (batch_size, timesteps, input_dim): got {inputs.shape}")
+        if len(inputs.shape) == 2:
+            inputs = np.expand_dims(inputs, axis=0)
+        batch_size, timesteps, input_dim = inputs.shape
+        print(batch_size, timesteps, input_dim)
