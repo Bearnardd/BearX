@@ -58,7 +58,8 @@ class Sequential:
         for layer in self.layers:
             for name, param in layer.params.items():
                 grad = layer.grads[name]
-                yield param, grad
+                w_update = layer.w_update[name]
+                yield param, grad, w_update, name
 
     def compile(self,
                 lr: float = 0.01,

@@ -36,7 +36,7 @@ model.skeleton()
 # we need to compile the model
 model.compile(
     loss=MSE(),
-    batch_size=1,
+    batch_size=2,
     optimizer=SGD(),
     lr=0.001,
 )

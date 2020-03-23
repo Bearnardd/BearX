@@ -22,6 +22,7 @@ class Layer:
         """
         self.params: Dict[str, Tensor] = {}
         self.grads: Dict[str, Tensor] = {}
+        self.w_update: Dict[str, Tensor] = {} 
 
     def __repr__(self):
         raise NotImplementedError(
@@ -266,20 +267,20 @@ class Flatten(Layer):
 
 
 class RNN(Layer):
-    def __init__(self, input_size:  int, hidden_units: int, activation='tanh', bptt_trunc=4, weight_initializer='rnn'):
+    def __init__(self, hidden_units: int, input_shape: Tuple = None, activation='tanh', bptt_trunc=4, weight_initializer='rnn'):
         super(RNN, self).__init__()
-        self.input_size = input_size
+        timesteps, input_dim = input_shape
         self.hidden_units = hidden_units
         self.activation = activation_functions[activation]()
         self.bptt_trunc = bptt_trunc
         self.weight_initializer = weight_initializers[weight_initializer](
-            input_size, hidden_units)
+            input_dim, hidden_units)
 
         # init weights matrixes
         self.params["U"], self.params["W"], self.params["V"] = self.weight_initializer()
-        self.grads["U"] = np.zeros_like(self.params["U"])
-        self.grads["W"] = np.zeros_like(self.params["W"])
-        self.grads["V"] = np.zeros_like(self.params["V"])
+        self.w_update["U"] = np.zeros_like(self.params["U"])
+        self.w_update["W"] = np.zeros_like(self.params["W"])
+        self.w_update["V"] = np.zeros_like(self.params["V"])
 
     def __repr__(self):
         output = (
@@ -301,4 +302,51 @@ class RNN(Layer):
         if len(inputs.shape) == 2:
             inputs = np.expand_dims(inputs, axis=0)
         batch_size, timesteps, input_dim = inputs.shape
-        print(batch_size, timesteps, input_dim)
+
+        self.state_input = np.zeros((batch_size, timesteps, self.hidden_units))
+        # states are just internal states of rnn cells
+        self.states = np.zeros((batch_size, timesteps+1, self.hidden_units))
+        self.outputs = np.zeros((batch_size, timesteps, input_dim))
+
+        self.layer_input = inputs
+
+        self.states[:, -1] = np.zeros((batch_size, self.hidden_units))
+        for t in range(timesteps):
+            # input for state t is current input and output of previous hidden state
+            self.state_input[:, t] = inputs[:, t].dot(self.params["U"].T) + self.states[:, t-1].dot(self.params["W"].T)
+            # apply activation function
+            self.states[:, t] = self.activation(self.state_input[:, t])
+            self.outputs[:, t] = self.states[:, t].dot(self.params["V"].T)
+
+        return self.outputs
+
+    def backward(self, accum_gradient: Tensor) -> Tensor:
+        _, timesteps, _ = accum_gradient.shape 
+
+        grad_U = np.zeros_like(self.params["U"]) 
+        grad_W = np.zeros_like(self.params["W"]) 
+        grad_V = np.zeros_like(self.params["V"])     
+
+        # will be passed on to the previous layer in the network
+        grad_next = np.zeros_like(accum_gradient)
+
+        #bptt
+        for t in reversed(range(timesteps)):
+            grad_V += accum_gradient[:, t].T.dot(self.states[:, t])
+            # w.r.t state input
+            grad_wrt_state = accum_gradient[:, t].dot(self.params["V"]) * self.activation.backward(self.state_input[:, t])
+            # w.r.t layer input
+            grad_next[:, t] = grad_wrt_state.dot(self.params["U"])
+            for t_ in reversed(np.arange(max(0, t - self.bptt_trunc), t+1)):
+                grad_U += grad_wrt_state.T.dot(self.layer_input[:, t_])
+                grad_W += grad_wrt_state.T.dot(self.states[:, t_- 1])
+                # w.r.t previous state
+                grad_wrt_state = grad_wrt_state.dot(self.params["W"]) * self.activation.backward(self.state_input[:, t-1])
+
+        # update weights
+        print(grad_W)
+        self.grads["U"] = grad_U
+        self.grads["W"] = grad_W
+        self.grads["V"] = grad_V
+
+        return grad_next
