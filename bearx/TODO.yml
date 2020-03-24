@@ -3,9 +3,8 @@ TODO:
     - think about converting activation functions to layers
     - add docs
     - add regulizers
-    - change layers to __call__??
     - change model to use __call__??
-    - add Initializersto Linear layer
+    - add Initializers to Linear layer
     - add shape checking
     - add validating embedding layer to be only first
     - add gates to backend??

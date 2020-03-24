@@ -5,6 +5,7 @@ import pytest
 import numpy as np
 from models import Sequential
 from layers import RNN
+from optimizers import SGD
 
 
 def test_repr_function():
@@ -35,14 +36,16 @@ def test_model_backprop_with_rnn():
     inputs = np.array([[[1, 1], [2, 2], [3, 3], [1, 1]]])
     targets = np.array([[[2, 2], [3, 3], [4, 4], [2, 2]]])
     model = Sequential()
-    model.add(RNN(2, input_shape=(3, 2)))
+    model.add(RNN(2, input_shape=(4, 2)))
     model.skeleton()
 
     model.compile(
-        batch_size=1
+        batch_size=1,
+        optimizer=SGD(momentum=0)
     )
 
-    his = model.train(inputs, targets, 100, verbose=True)
+    his = model.train(inputs, targets, 30, verbose=True)
     preds = model.predict(inputs)
     preds = preds.astype('int32') 
-    print(preds)
+
+    assert preds.shape == (1, 4, 2)

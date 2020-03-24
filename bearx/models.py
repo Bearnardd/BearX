@@ -55,11 +55,20 @@ class Sequential:
         return gradient
 
     def get_params_and_gradients(self):
-        for layer in self.layers:
-            for name, param in layer.params.items():
-                grad = layer.grads[name]
-                w_update = layer.w_update[name]
-                yield param, grad, w_update, name
+        if self.optimizer.momentum != 0:
+            for layer in self.layers:
+                for params, w_update in zip(layer.params.items(), layer.w_update.values()):
+                    name = params[0]
+                    grad = layer.grads[name]
+                    print(name)
+                    print(params[1].shape)
+                    print(w_update.shape)
+                    yield params[1], grad, w_update
+        else:
+            for layer in self.layers:
+                for name, param in layer.params.items():
+                    grad = layer.grads[name]
+                    yield param, grad
 
     def compile(self,
                 lr: float = 0.01,

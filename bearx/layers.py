@@ -344,7 +344,6 @@ class RNN(Layer):
                 grad_wrt_state = grad_wrt_state.dot(self.params["W"]) * self.activation.backward(self.state_input[:, t-1])
 
         # update weights
-        print(grad_W)
         self.grads["U"] = grad_U
         self.grads["W"] = grad_W
         self.grads["V"] = grad_V
