@@ -22,7 +22,7 @@ class Layer:
         """
         self.params: Dict[str, Tensor] = {}
         self.grads: Dict[str, Tensor] = {}
-        self.w_update: Dict[str, Tensor] = {} 
+        self.w_update: Dict[str, Tensor] = {}
 
     def __repr__(self):
         raise NotImplementedError(
@@ -51,6 +51,7 @@ class Activation(Layer):
     Activations base class. All activation layers
     inherit from it
     """
+
     def __init__(self, activation, activation_prime) -> None:
         super(Activation, self).__init__()
         self.activation = activation
@@ -100,9 +101,9 @@ class Linear(Layer):
     """
     fully-connected nn layer.
 
-    Convert inputs as shown below:
-    output = inputs * weights + bias
-    output = activation_function(output)
+    Applies linear transformations on 
+    input data. If specified can also 
+    apply non-linear activation function
 
     Parameters:
     ----------
@@ -110,8 +111,8 @@ class Linear(Layer):
         size of each input smaple 
     out_features: int
         size of each output sample 
-    activation: Activation
-        
+    activation: Activation or str (None)
+        activation function for this layer 
     """
 
     def __init__(
@@ -122,12 +123,10 @@ class Linear(Layer):
         **kwargs
     ):
         super(Linear, self).__init__(**kwargs)
-        # TODO: add activations
-        # remove selfing features:w
         if activation != None:
             self.activation = activation_functions[activation]()
         else:
-            self.activation = None 
+            self.activation = None
         self.in_features = in_features
         self.out_features = out_features
         # TODO: add kwargs
@@ -158,9 +157,16 @@ class Linear(Layer):
 
     def __call__(self, inputs: Tensor) -> Tensor:
         """
-        element wise multiplication and addition
-        :param: inputs: Tensor - inpt data
-        :return: output matrix with activation function applied
+        Element wise multiplication and addition
+
+        Parameters:
+        -----------
+        inputs: Tensor        
+            Input data to feed through layer 
+
+        Return:
+        -------
+        output: Tensor
         """
         # both methods give the same results
         # output = np.add(np.multiply(inputs, self.params["W"]) \
@@ -173,11 +179,21 @@ class Linear(Layer):
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
         """
+        Applies back propagation algorirthm,
+        and saves weights gradients
+
+        Parameters:
+        -----------
+        gradient: Tensor
+
+        Return:
+        -------
+        gradient: Tensor
+
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = np.multiply(self.inputs.T, gradient)
         return np.multiply(gradient, self.params["W"].T)
         """
-
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = self.inputs.T @ gradient
         return gradient @ self.params["W"].T
@@ -189,6 +205,20 @@ class Linear(Layer):
 class Embedding(Layer):
     """
     Turns indexes (integers) into dense vectors of given size
+    ---------------------------------------------------
+    | Can only be used as the first layer in a model! |
+    ---------------------------------------------------
+
+    Parameters:
+    -----------
+    input_dim: int
+        size o the vocabulary -> max int index + 1
+    output_dim: int
+        dimension of the dense embedding
+    embeddings_initializer: Initializer
+        initializer for embeddings matrix
+    inpt_length: int
+        length of input sequences [if they are constant, else None]
 
     # Example:
 
@@ -196,27 +226,16 @@ class Embedding(Layer):
         model = Sequential()
         model.add(Embedding(2, 2))
     ```
+    |
+    |
+    v
+    # the model will take as inpt matrix of shape (batch_size, input_length)
+    # and convert it into dense vectors of given size (output_dim)
 
-        |
-        |
-        v
-
-        # the model will take as inpt matrix of shape (batch_size, inpt_length)
-        # and convert it into dense vectors of given size (output_dim)
-
-    @param: inpt_dim (int) : size o the vocabulary -> max int index + 1
-    @param: output_dim (int) : dimension of the dense embedding
-    @param: embeddings_initializer (Initializer) : initializer for embeddings matrix
-    @param: inpt_length (int) : length of inpt sequences [if they are constant, else None]
 
     @__call__: return array of dense arrays -> convert indices to vectors of random numbers picked
     from given distribution
 
-    # TODO: add example
-
-    ---------------------------------------------------
-    | Can only be used as the first layer in a model! |
-    ---------------------------------------------------
     """
 
     def __init__(self, inpt_dim: int, output_dim: int,
@@ -225,20 +244,24 @@ class Embedding(Layer):
                  **kwargs):
         super(Embedding, self).__init__()
 
-        self.inpt_dim = inpt_dim
+        self.input_dim = inpt_dim
         self.output_dim = output_dim
-        self.inpt_length = inpt_length
+        self.input_length = inpt_length
         self.embeddings = self._build(embeddings_initializer)
 
     def _build(self, embeddings_initializer) -> Tensor:
-        weight = embeddings_initializer(
-            shape=(self.inpt_dim, self.output_dim))
-        return weight
+        embeddings = embeddings_initializer(
+            shape=(self.input_dim, self.output_dim))
+        return embeddings
 
     def __repr__(self) -> str:
-        return f"inpt_dim: {self.inpt_dim}, output_dim: {self.output_dim}"
+        return f"inpt_dim: {self.input_dim}, output_dim: {self.output_dim}"
 
     def display_embedding(self):
+        """
+        Helper function to vizualize what is going on
+        inside embeddings
+        """
         print("+-----------+" + self.output_dim * 13 * "-" + "+")
         print("|   index   |" + self.output_dim * 5 * " " + "Embedding")
         print("+-----------+" + self.output_dim * 13 * "-" + "+")
@@ -248,6 +271,19 @@ class Embedding(Layer):
         print("+-----------+" + self.output_dim * 13 * "-" + "+")
 
     def __call__(self, inputs: Tensor) -> Tensor:
+        """
+        Convert indices to vectors of random numbers  
+        generated from given distribution (RandomUniform)
+
+        Parameters:
+        -----------
+        inputs: Tensor:
+            tensor of indices
+
+        Return:
+        _______
+        Tensor of dense tensors
+        """
         try:
             if inputs.dtype != "int32":
                 inputs = inputs.astype('int32')
@@ -261,8 +297,13 @@ class Embedding(Layer):
 
 class Flatten(Layer):
     """
-    Flatten output of for example Embedding layer to be able to
-    pass it through Linear layer (Dense/Fully Connected)
+    Flatten output of the previous layer 
+
+
+    Return:
+    -------
+    output: Tensor
+        Flattened output of the previous layer
 
     # Example
 
@@ -271,12 +312,11 @@ class Flatten(Layer):
         model.add(Embedding(2, 2))
         model.add(Flatten)
     ```
-        |
-        |
-        v
-
-    # as the output we got tensor with shape (4,)
-    # so we flattened out, output from Embedding layer which was (2, 2)
+    |
+    |
+    v
+    We flatten output from embedding layer of shape(2, 2),
+    so we end up with a tensor of shape(4,) [2 * 2]
     """
 
     def __call__(self, inputs: Tensor) -> Tensor:
@@ -287,6 +327,19 @@ class Flatten(Layer):
 
 
 class RNN(Layer):
+    """
+    The 'vanilla' rnn layer
+
+    Parameters:
+    -----------
+    hidden_units: int
+        number of hidden states(cells) in the layer
+    activation: string
+        activation function which will be applied to the output of the layer
+    input_shape: Tuple (None)
+        
+    """
+
     def __init__(self, hidden_units: int, input_shape: Tuple = None, activation='tanh', bptt_trunc=4, weight_initializer='rnn'):
         super(RNN, self).__init__()
         timesteps, input_dim = input_shape
@@ -333,7 +386,8 @@ class RNN(Layer):
         self.states[:, -1] = np.zeros((batch_size, self.hidden_units))
         for t in range(timesteps):
             # input for state t is current input and output of previous hidden state
-            self.state_input[:, t] = inputs[:, t].dot(self.params["U"].T) + self.states[:, t-1].dot(self.params["W"].T)
+            self.state_input[:, t] = inputs[:, t].dot(
+                self.params["U"].T) + self.states[:, t-1].dot(self.params["W"].T)
             # apply activation function
             self.states[:, t] = self.activation(self.state_input[:, t])
             self.outputs[:, t] = self.states[:, t].dot(self.params["V"].T)
@@ -341,27 +395,29 @@ class RNN(Layer):
         return self.outputs
 
     def backward(self, accum_gradient: Tensor) -> Tensor:
-        _, timesteps, _ = accum_gradient.shape 
+        _, timesteps, _ = accum_gradient.shape
 
-        grad_U = np.zeros_like(self.params["U"]) 
-        grad_W = np.zeros_like(self.params["W"]) 
-        grad_V = np.zeros_like(self.params["V"])     
+        grad_U = np.zeros_like(self.params["U"])
+        grad_W = np.zeros_like(self.params["W"])
+        grad_V = np.zeros_like(self.params["V"])
 
         # will be passed on to the previous layer in the network
         grad_next = np.zeros_like(accum_gradient)
 
-        #bptt
+        # bptt
         for t in reversed(range(timesteps)):
             grad_V += accum_gradient[:, t].T.dot(self.states[:, t])
             # w.r.t state input
-            grad_wrt_state = accum_gradient[:, t].dot(self.params["V"]) * self.activation.backward(self.state_input[:, t])
+            grad_wrt_state = accum_gradient[:, t].dot(
+                self.params["V"]) * self.activation.backward(self.state_input[:, t])
             # w.r.t layer input
             grad_next[:, t] = grad_wrt_state.dot(self.params["U"])
             for t_ in reversed(np.arange(max(0, t - self.bptt_trunc), t+1)):
                 grad_U += grad_wrt_state.T.dot(self.layer_input[:, t_])
-                grad_W += grad_wrt_state.T.dot(self.states[:, t_- 1])
+                grad_W += grad_wrt_state.T.dot(self.states[:, t_ - 1])
                 # w.r.t previous state
-                grad_wrt_state = grad_wrt_state.dot(self.params["W"]) * self.activation.backward(self.state_input[:, t-1])
+                grad_wrt_state = grad_wrt_state.dot(
+                    self.params["W"]) * self.activation.backward(self.state_input[:, t-1])
 
         # update weights
         self.grads["U"] = grad_U
