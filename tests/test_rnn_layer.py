@@ -1,11 +1,11 @@
 import sys
-sys.path.append("../bearx")
+sys.path.append("..")
 
 import pytest
 import numpy as np
-from models import Sequential
-from layers import RNN
-from optimizers import SGD
+from bearx.models import Sequential
+from bearx.layers import RNN
+from bearx.optimizers import SGD
 
 
 def test_repr_function():

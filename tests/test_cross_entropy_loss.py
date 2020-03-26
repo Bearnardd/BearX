@@ -1,9 +1,9 @@
 import sys
-sys.path.append("..")
+sys.path.append("../bearx")
 
 import numpy as np
-from bearx.losses import CrossEntropy
-from bearx.activations import softmax, softmax_prime
+from losses import CrossEntropy
+from activations import softmax, softmax_prime
 
 ce = CrossEntropy()
 
@@ -30,8 +30,8 @@ def test_backward():
 
 
 def test_model_with_softmax():
-    from bearx.models import Sequential
-    from bearx.layers import Linear, Softmax
+    from models import Sequential
+    from layers import Linear, Softmax
 
     inputs = np.array([[0.25, 0.63, 0.12]])
     targets = np.array([0, 1, 0])
@@ -46,9 +46,10 @@ def test_model_with_softmax():
 
     #model.back_propagation()
 
-    exit(0)
-    
+def test_cross_entropy_loss_calc():
+    predicted = np.array([0.1, 0.4, 0.5])
+    targets = np.array([0, 0, 1])
+    ce = CrossEntropy()
+    ce.loss(predicted, targets)
 
-if __name__ == "__main__":
-    #test_backward()
-    test_model_with_softmax()
+    
