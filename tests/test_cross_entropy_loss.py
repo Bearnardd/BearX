@@ -1,9 +1,7 @@
-import sys
-sys.path.append("../bearx")
+from bearx.losses import CrossEntropy
+from bearx.activations import softmax, softmax_prime
 
 import numpy as np
-from losses import CrossEntropy
-from activations import softmax, softmax_prime
 
 ce = CrossEntropy()
 

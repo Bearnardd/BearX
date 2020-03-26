@@ -2,10 +2,10 @@ import numpy as np
 import sys
 
 # change it to import initializers??
-from activations import *
-from initializers import Initializer, RNNinit, RandomUniform, Zeros, Ones, RandomNormalDist
-from backend import gather, Softmax
-from tensor import Tensor
+from bearx.activations import *
+from bearx.initializers import Initializer, RNNinit, RandomUniform, Zeros, Ones, RandomNormalDist
+from bearx.backend import gather, Softmax
+from bearx.tensor import Tensor
 
 from datetime import datetime
 
@@ -47,13 +47,17 @@ class Layer:
 
 
 class Activation(Layer):
+    """
+    Activations base class. All activation layers
+    inherit from it
+    """
     def __init__(self, activation, activation_prime) -> None:
         super(Activation, self).__init__()
         self.activation = activation
         self.activation_prime = activation_prime
 
     def __repr__(self):
-        return {"activation": self.activation.__name__}
+        return f"activation: {self.activation.__name__}"
 
     def __call__(self, inputs: Tensor) -> Tensor:
         self.inputs = inputs
@@ -94,10 +98,20 @@ weight_initializers = {
 
 class Linear(Layer):
     """
-    Basic Linear layer.
-    Convets inputs as shown below:
+    fully-connected nn layer.
+
+    Convert inputs as shown below:
     output = inputs * weights + bias
     output = activation_function(output)
+
+    Parameters:
+    ----------
+    in_features: int
+        size of each input smaple 
+    out_features: int
+        size of each output sample 
+    activation: Activation
+        
     """
 
     def __init__(
@@ -110,7 +124,10 @@ class Linear(Layer):
         super(Linear, self).__init__(**kwargs)
         # TODO: add activations
         # remove selfing features:w
-        self.activation = activation
+        if activation != None:
+            self.activation = activation_functions[activation]()
+        else:
+            self.activation = None 
         self.in_features = in_features
         self.out_features = out_features
         # TODO: add kwargs
@@ -151,7 +168,7 @@ class Linear(Layer):
         self.inputs = inputs
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
-            return self.activation.forward(output)
+            return self.activation(output)
         return output
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
@@ -164,6 +181,9 @@ class Linear(Layer):
         self.grads["b"] = np.sum(gradient, axis=0)
         self.grads["W"] = self.inputs.T @ gradient
         return gradient @ self.params["W"].T
+
+    def parameters(self):
+        return np.prod(self.params["W"].shape) + np.prod(self.params["b"].shape)
 
 
 class Embedding(Layer):

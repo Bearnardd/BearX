@@ -1,5 +1,5 @@
-from tensor import Tensor
-from losses import CrossEntropy
+from bearx.tensor import Tensor
+from bearx.losses import BinaryCrossEntropy 
 
 import numpy as np
 
@@ -67,7 +67,7 @@ def softmax_prime(x):
 class Softmax:
     def __init__(self, epsilon=1e-12) -> None:
         self.epsilon = epsilon
-        self.ce = CrossEntropy()
+        self.ce = BinaryCrossEntropy()
 
     def predict(self, x: Tensor) -> Tensor:
         exp_scores = np.exp(x)

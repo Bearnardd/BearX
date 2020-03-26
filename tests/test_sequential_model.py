@@ -1,9 +1,5 @@
-import sys
-sys.path.append("../bearx")
-
-
-from models import Sequential
-from layers import RNN, Linear
+from bearx.layers import RNN, Linear
+from bearx.models import Sequential
 
 
 def test_skeleton_function():

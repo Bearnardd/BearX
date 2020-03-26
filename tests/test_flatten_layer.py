@@ -1,10 +1,7 @@
-import sys
-sys.path.append("../bearx")
+from bearx.models import Sequential
+from bearx.layers import Flatten, Embedding, Linear
 
 import numpy as np
-
-from layers import Flatten, Embedding, Linear
-from models import Sequential
 
 
 def test_flatten_layer():
@@ -26,4 +23,3 @@ def test_flatten_layer_with_model():
     inputs = np.array([0, 1])
     out = model.feed_forward(inputs)
     assert out.shape == (1,)
-

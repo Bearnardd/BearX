@@ -1,8 +1,5 @@
-import sys
-sys.path.append("../bearx")
-
-from layers import Embedding
-from models import Sequential
+from bearx.layers import Embedding
+from bearx.models import Sequential
 
 import numpy as np
 

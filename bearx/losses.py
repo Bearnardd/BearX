@@ -1,4 +1,4 @@
-from tensor import Tensor
+from bearx.tensor import Tensor
 
 import numpy as np
 

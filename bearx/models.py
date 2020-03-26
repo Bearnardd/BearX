@@ -1,9 +1,9 @@
-from layers import Layer
-from tensor import Tensor
-from utils.data.DataLoader import DataLoader
-from losses import Loss, MSE
-from optimizers import Optimizer, SGD
-from callbacks.callbacks import History
+from bearx.layers import Layer
+from bearx.tensor import Tensor
+from bearx.utils.data.DataLoader import DataLoader
+from bearx.losses import Loss, MSE
+from bearx.optimizers import Optimizer, SGD
+from bearx.callbacks.callbacks import History
 
 import numpy as np
 
@@ -84,7 +84,7 @@ class Sequential:
         self.optimizer = optimizer
         self.optimizer.lr = lr
         self.compiled = True
-    
+
     def train(self,
               inputs: Tensor,
               labels: Tensor,
@@ -93,7 +93,7 @@ class Sequential:
         assert self.compiled, ("Before Training You have "
                                "to compile the model!")
         print("The Training have begun!")
-        history = History() 
+        history = History()
         for epoch in range(epochs):
             epoch_loss = 0.0
             for batch in self.iterator(inputs, labels):
@@ -133,10 +133,9 @@ class Sequential:
         else:
             raise NotADirectoryError(f"Cant find a directory: {dir_path}")
         print("Weight Loaded Successfully!")
-    
+
     def predict(self, x: Tensor) -> Tensor:
         if len(x.shape) == 1:
             x = np.expand_dims(x, axis=0)
         preds = self.feed_forward(x)
         return preds
-    

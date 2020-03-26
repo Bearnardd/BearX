@@ -1,8 +1,6 @@
-import sys
-sys.path.append("..")
-
 import pytest
 import numpy as np
+
 from bearx.models import Sequential
 from bearx.layers import RNN
 from bearx.optimizers import SGD
@@ -46,6 +44,6 @@ def test_model_backprop_with_rnn():
 
     his = model.train(inputs, targets, 30, verbose=True)
     preds = model.predict(inputs)
-    preds = preds.astype('int32') 
+    preds = preds.astype('int32')
 
     assert preds.shape == (1, 4, 2)
