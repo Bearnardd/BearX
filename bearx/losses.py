@@ -39,7 +39,7 @@ class MSE(Loss):
         return gradient
 
 
-class CrossEntropy(Loss):
+class BinaryCrossEntropy(Loss):
     def loss(self, predicted: Tensor, target: Tensor, epsilon=1e-12) -> float:
         """
         Computes cross entropy between target and prediced
@@ -69,11 +69,13 @@ class CrossEntropy(Loss):
         """
         assert len(predicted) == len(target), "Lenghts of predicted and target have to be te same"
         predicted = np.clip(predicted, epsilon, 1 - epsilon)
-        N = predicted.shape[0]
-        #ce = -np.sum(target * np.log(predicted))
-        ce = -np.sum(target @ np.log(predicted))
-        return ce
+        print(predicted.shape)
+        ce = -np.sum(target * np.log(predicted))
+        ce1 = - target * np.log(predicted) + (1 - target) * np.log(1 - predicted)
+        print(ce, ce1)
+        #return ce
 
     def backward(self, predicted: Tensor, target: int) -> Tensor:
+        predicted = np.clip(pre)
         predicted[target] -= 1
         return predicted
