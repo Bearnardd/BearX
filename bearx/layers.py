@@ -30,11 +30,17 @@ class Layer:
         )
 
     def __call__(self, inputs: Tensor) -> Tensor:
+        """
+        Forward Propagation
+        """
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
 
     def backward(self, grad: Tensor) -> Tensor:
+        """
+        Backward Propagation
+        """
         raise NotImplementedError(
             "Function not implemented in base class!"
         )
@@ -168,16 +174,13 @@ class Linear(Layer):
         -------
         output: Tensor
         """
-        # both methods give the same results
-        # output = np.add(np.multiply(inputs, self.params["W"]) \
-        # self.params["b"]))[0]
         self.inputs = inputs
         output = inputs @ self.params["W"] + self.params["b"]
         if self.activation:
             return self.activation(output)
         return output
 
-    def back_propagation(self, gradient: Tensor) -> Tensor:
+    def backward(self, gradient: Tensor) -> Tensor:
         """
         Applies back propagation algorirthm,
         and saves weights gradients
@@ -229,13 +232,8 @@ class Embedding(Layer):
     |
     |
     v
-    # the model will take as inpt matrix of shape (batch_size, input_length)
-    # and convert it into dense vectors of given size (output_dim)
-
-
-    @__call__: return array of dense arrays -> convert indices to vectors of random numbers picked
-    from given distribution
-
+    The model will take as inpt matrix of shape (batch_size, input_length)
+    and convert it into dense vectors of given size (output_dim)
     """
 
     def __init__(self, inpt_dim: int, output_dim: int,
@@ -333,11 +331,17 @@ class RNN(Layer):
     Parameters:
     -----------
     hidden_units: int
-        number of hidden states(cells) in the layer
-    activation: string
-        activation function which will be applied to the output of the layer
+        Number of hidden states(cells) in the layer
     input_shape: Tuple (None)
-        
+        Shape of input data (timesteps, input_dim)        
+    activation: string
+        Activation function which will be applied to the output of the layer
+    bptt_trunc: 
+        Decides how many time steps the gradient should be propagated
+        backwards through internal states given the loss gradient for
+        time step t
+    weight_initializer: string ('rnn')
+        Type of weights initialization 
     """
 
     def __init__(self, hidden_units: int, input_shape: Tuple = None, activation='tanh', bptt_trunc=4, weight_initializer='rnn'):

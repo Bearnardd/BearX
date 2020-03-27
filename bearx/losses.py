@@ -33,7 +33,7 @@ class MSE(Loss):
 
     def gradient(self, predicted: Tensor, target: Tensor) -> Tensor:
         """
-        derivative of mse is just 2 * (predicted - target)
+        Derivative of MSE is just 2 * (predicted - target)
         """
         gradient = 2 * (predicted - target)
         return gradient

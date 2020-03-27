@@ -6,23 +6,38 @@ from bearx.optimizers import Optimizer, SGD
 from bearx.callbacks.callbacks import History
 
 import numpy as np
+from tqdm import tqdm
 
 import os
 import pickle
 
 
+losses = {
+    "mse": MSE,
+}
+
+
 class Sequential:
+    """
+    Sequential model. As initialization we
+    create list of layers and flag of being
+    compiled
+    """
+
     def __init__(self) -> None:
         self.layers = []
         self.compiled = False
         #self.history = History()
 
     def add(self, layer: Layer):
+        """
+        Add new layer to the stack
+        """
         self.layers.append(layer)
 
     def skeleton(self):
         """
-        prints out model architecture
+        Prints out model architecture
         """
         print(24 * ' ', "Model Summary")
         print(63 * '=')
@@ -41,28 +56,52 @@ class Sequential:
 
     def feed_forward(self, inputs: Tensor) -> Tensor:
         """
-        Implementation of feed forward algorirthm
-        We iterate over all Linear layers to get
-        transformed output
+        We iterate over all layers and forward
+        propagate
+
+        Parameters:
+        -----------
+        inputs: Tensor
+            Input data
+
+        Return:
+        -------
+        inputs: Tensor 
+            Transformed input data
         """
         for layer in self.layers:
             inputs = layer(inputs)
         return inputs
 
     def back_propagation(self, gradient: Tensor) -> Tensor:
+        """
+        We iterate over all layers and back
+        propagate
+
+        Parameters:
+        -----------
+        gradient: Tensor
+            Gradient(Derivative) of the loss function
+
+        Return:
+        -------
+        gradient: Tensor
+        """
         for layer in reversed(self.layers):
             gradient = layer.backward(gradient)
         return gradient
 
     def get_params_and_gradients(self):
+        """
+        Helper function to get weights
+        and gradients for all layers
+        in the model
+        """
         if self.optimizer.momentum != 0:
             for layer in self.layers:
                 for params, w_update in zip(layer.params.items(), layer.w_update.values()):
                     name = params[0]
                     grad = layer.grads[name]
-                    print(name)
-                    print(params[1].shape)
-                    print(w_update.shape)
                     yield params[1], grad, w_update
         else:
             for layer in self.layers:
@@ -72,12 +111,12 @@ class Sequential:
 
     def compile(self,
                 lr: float = 0.01,
-                loss: Loss = MSE(),
+                loss: str = 'mse',
                 batch_size: int = 32,
                 shuffle: bool = True,
                 iterator: DataLoader = DataLoader(),
                 optimizer: Optimizer = SGD()) -> None:
-        self.loss = loss
+        self.loss = losses[loss]()
         self.iterator = iterator
         self.iterator.batch_size = batch_size
         self.iterator.shuffle = shuffle
@@ -94,7 +133,7 @@ class Sequential:
                                "to compile the model!")
         print("The Training have begun!")
         history = History()
-        for epoch in range(epochs):
+        for epoch in tqdm(range(epochs), desc=f"Training"):
             epoch_loss = 0.0
             for batch in self.iterator(inputs, labels):
                 preds = self.feed_forward(batch.inputs)

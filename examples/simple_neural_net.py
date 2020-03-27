@@ -26,23 +26,21 @@ outputs = np.array([0,1,1,0])
 # init sequential model
 model = Sequential()
 # add layers
-model.add(Linear(INPUT_SIZE, OUTPUT_SIZE, activation=Relu()))
-#model.add(Tanh())
-#model.add(Linear(HIDDEN_SIZE, OUTPUT_SIZE))
+model.add(Linear(INPUT_SIZE, OUTPUT_SIZE, activation='relu'))
 
 # we can check structure of the model 
 model.skeleton()
 
 # we need to compile the model
 model.compile(
-    loss=MSE(),
+    loss='mse',
     batch_size=2,
     optimizer=SGD(),
     lr=0.001,
 )
 
 # to train we just use train method
-history = model.train(inputs, outputs, 2000, verbose=True)
+history = model.train(inputs, outputs, 100000, verbose=False)
 
 # You can plot history of loss
 plt.plot(history.history["loss"])
