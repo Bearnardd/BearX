@@ -15,7 +15,7 @@ model.add(Linear(2, 2), activation='relu')
 model.compile(loss='mse',
               optimizer='sgd')
 ```
-### What have been already implemented (31.3.2020)?
+### What have been implemented so far? (31.3.2020)
 #### Models
 1) Sequential
 #### Layers
@@ -38,7 +38,7 @@ model.compile(loss='mse',
 2) Ones
 3) Normal Distribution
 4) Uniform Distribution
-5) RNNinit
+5) RNNinit  
 ### Support
 BearX supports only python 3.x
 
