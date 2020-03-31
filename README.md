@@ -43,7 +43,7 @@ model.compile(loss='mse',
 BearX supports only python 3.x
 
 
-### Planning Releases What will be added soon?
+### What will be added soon?
 #### Layers
 1) Convolutional
 #### Optimizers
