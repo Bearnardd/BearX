@@ -2,7 +2,7 @@
 ### What is BearX?
 BearX is my personal try to create self-sufficient Deep-Learning library which contains the best aspects (in my opinion)
 of both Keras and Pytorch frameworks, but most importantly I am working on this project to get in-depth knownledge about
-maths behind neural network and learn how properly structure larger projects in Python.
+maths behind neural network and learn how to properly structure larger projects in Python.
 ### Quickstart with BearX
 ```python
 from bearx.layers import Linear
