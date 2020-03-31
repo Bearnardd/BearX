@@ -40,13 +40,13 @@ model.compile(loss='mse',
 4) Uniform Distribution
 5) RNNinit  
 ### Support
-BearX supports only python 3.x
+BearX supports only python 3.x  
 
-
+  
 ### What will be added soon?
 #### Layers
 1) Convolutional
 #### Optimizers
 1) RMSprop
 2) Adam
-#### Regulaizers
+#### Regularizers
